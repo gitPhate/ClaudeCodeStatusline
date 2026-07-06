@@ -169,8 +169,16 @@ process.stdin.on('end', () => {
 
   const velocityPart = `${fg24(0, 200, 80)}+${added}${RESET} ${fg24(220, 40, 20)}-${removed}${RESET}`;
 
-  const rateLimitPart = rateLimitPct != null ? usagePct(Number(rateLimitPct), '5h') : '';
-  const weekLimitPart = weekLimitPct != null ? usagePct(Number(weekLimitPct), '7d') : '';
+  const DOT = ` ${fg24(100, 100, 100)}·${RESET} `;
+
+  const rateLimitSegments = [];
+  if (rateLimitPct != null) rateLimitSegments.push(usagePct(Number(rateLimitPct), '5h'));
+  if (weekLimitPct != null) {
+    const resetIn = formatResetIn(weekLimitResetsAt);
+    const resetPart = resetIn ? ` ${fg24(150, 150, 150)}(${resetIn})${RESET}` : '';
+    rateLimitSegments.push(usagePct(Number(weekLimitPct), '7d') + resetPart);
+  }
+  const rateLimitsPart = rateLimitSegments.join(DOT);
 
   const effortPart = effortLevel ? ` (${effortLevel})` : '';
 
