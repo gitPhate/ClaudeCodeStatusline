@@ -168,7 +168,7 @@ process.stdin.on('end', () => {
 
   const contextPart = usageTrio(usedPct, 'ctx');
 
-  const velocityPart = `${fg24(0, 200, 80)}+${added}${RESET} ${fg24(220, 40, 20)}-${removed}${RESET}`;
+  const velocityPart = `${fg24(150, 150, 150)}lines ${RESET}${fg24(0, 200, 80)}+${added}${RESET} ${fg24(220, 40, 20)}-${removed}${RESET}`;
 
   const DOT = ` ${fg24(100, 100, 100)}·${RESET} `;
 
