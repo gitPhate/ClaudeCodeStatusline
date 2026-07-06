@@ -108,7 +108,9 @@ process.stdin.on('end', () => {
 
   const rateLimitPart = rateLimitPct != null ? usageTrio(Number(rateLimitPct)) : '';
 
-  const modelPart = `${fg24(200, 80, 220)}🤖 ${model}${RESET}`;
+  const thinkingPart = thinkingEnabled ? ' 🧠' : '';
+
+  const modelPart = `${fg24(200, 80, 220)}🤖 ${model}${thinkingPart}${RESET}`;
 
   const parts = [repoPart, branchPart, contextPart, velocityPart, rateLimitPart, modelPart].filter(Boolean);
 
