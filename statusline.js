@@ -129,7 +129,8 @@ process.stdin.on('end', () => {
 
   const velocityPart = `${fg24(0, 200, 80)}+${added}${RESET} ${fg24(220, 40, 20)}-${removed}${RESET}`;
 
-  const rateLimitPart = rateLimitPct != null ? usageTrio(Number(rateLimitPct)) : '';
+  const rateLimitPart = rateLimitPct != null ? usagePct(Number(rateLimitPct)) : '';
+  const weekLimitPart = weekLimitPct != null ? usagePct(Number(weekLimitPct)) : '';
 
   const effortPart = effortLevel ? ` (${effortLevel})` : '';
 
