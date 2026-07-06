@@ -189,7 +189,7 @@ process.stdin.on('end', () => {
   const durationSecRem = durationSec % 60;
   const clockPart = `${fg24(150, 150, 150)}⏱️ ${durationMin}m ${durationSecRem}s${RESET}`;
 
-  const parts = [repoPart, branchPart, contextPart, velocityPart, rateLimitPart, weekLimitPart, clockPart, modelPart].filter(Boolean);
+  const parts = [repoPart, branchPart, contextPart, velocityPart, rateLimitsPart, clockPart, modelPart].filter(Boolean);
 
   process.stdout.write(parts.join(SEP) + '\n');
 });
