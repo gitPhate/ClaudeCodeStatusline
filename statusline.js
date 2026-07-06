@@ -108,7 +108,7 @@ process.stdin.on('end', () => {
 
   const rateLimitPart = rateLimitPct != null ? usageTrio(Number(rateLimitPct)) : '';
 
-  const effortPart = effortLevel ? ` ${effortLevel}` : '';
+  const effortPart = effortLevel ? ` (${effortLevel})` : '';
 
   const modelPart = `${fg24(200, 80, 220)}🤖 ${model}${effortPart}${RESET}`;
 
