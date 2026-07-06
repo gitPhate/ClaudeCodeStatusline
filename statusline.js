@@ -23,6 +23,7 @@ process.stdin.on('end', () => {
   const removed = Number(input?.cost?.total_lines_removed ?? 0) || 0;
   const rateLimitPct = input?.rate_limits?.five_hour?.used_percentage;
   const weekLimitPct = input?.rate_limits?.seven_day?.used_percentage;
+  const rateLimitResetsAt = input?.rate_limits?.five_hour?.resets_at;
   const weekLimitResetsAt = input?.rate_limits?.seven_day?.resets_at;
   const effortLevel = input?.effort?.level || '';
   const durationMs = Number(input?.cost?.total_duration_ms ?? 0) || 0;
