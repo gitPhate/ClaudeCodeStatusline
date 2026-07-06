@@ -151,7 +151,10 @@ process.stdin.on('end', () => {
     return `${labelPart}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
-  const repoPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
+  const folderPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
+
+  const leafName = path.basename(cwd);
+  const leafPart = leafName && leafName !== repoName ? `${fg24(150, 150, 150)}/${leafName}${RESET}` : '';
 
   const dirtyPart = branch
     ? [
@@ -162,9 +165,9 @@ process.stdin.on('end', () => {
         .join(' ')
     : '';
 
-  const branchPart = branch
-    ? `\x1b[1m${fg24(0, 215, 215)}🌿 (${branch})${RESET}${dirtyPart ? ' ' + dirtyPart : ''}`
-    : '';
+  const branchPart = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (${branch})${RESET}` : '';
+
+  const repoPart = [folderPart, leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
 
   const contextPart = usageTrio(usedPct, 'ctx');
 
