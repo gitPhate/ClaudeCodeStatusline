@@ -96,7 +96,8 @@ process.stdin.on('end', () => {
     const emptyBar = `${fg24(60, 60, 60)}${'█'.repeat(empty)}`;
     const bar = `${filledBar}${emptyBar}${RESET}`;
 
-    return `${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
+    const labelPart = label ? `${fg24(150, 150, 150)}${label} ${RESET}` : '';
+    return `${labelPart}${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
   function usagePct(rawPct, label) {
