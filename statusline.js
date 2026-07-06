@@ -22,6 +22,7 @@ process.stdin.on('end', () => {
   const added = Number(input?.cost?.total_lines_added ?? 0) || 0;
   const removed = Number(input?.cost?.total_lines_removed ?? 0) || 0;
   const rateLimitPct = input?.rate_limits?.five_hour?.used_percentage;
+  const thinkingEnabled = Boolean(input?.thinking?.enabled);
 
   const repoName = repoNameFromInput || path.basename(cwd);
 
