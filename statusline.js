@@ -24,6 +24,7 @@ process.stdin.on('end', () => {
   const rateLimitPct = input?.rate_limits?.five_hour?.used_percentage;
   const weekLimitPct = input?.rate_limits?.seven_day?.used_percentage;
   const effortLevel = input?.effort?.level || '';
+  const durationMs = Number(input?.cost?.total_duration_ms ?? 0) || 0;
 
   const repoName = repoNameFromInput || path.basename(cwd);
 
