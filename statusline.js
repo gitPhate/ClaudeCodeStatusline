@@ -28,11 +28,23 @@ process.stdin.on('end', () => {
   const repoName = repoNameFromInput || path.basename(cwd);
 
   let branch = '';
+  let staged = 0;
+  let modified = 0;
   try {
     execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' });
     branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
       .toString()
       .trim();
+    staged = execSync('git diff --cached --numstat', { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim()
+      .split('\n')
+      .filter(Boolean).length;
+    modified = execSync('git diff --numstat', { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim()
+      .split('\n')
+      .filter(Boolean).length;
   } catch {
     branch = '';
   }
