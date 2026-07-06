@@ -172,12 +172,17 @@ process.stdin.on('end', () => {
 
   const DOT = ` ${fg24(100, 100, 100)}·${RESET} `;
 
+  function resetBracket(resetsAtSec) {
+    const resetIn = formatResetIn(resetsAtSec);
+    return resetIn ? ` ${fg24(150, 150, 150)}(reset ${resetIn})${RESET}` : '';
+  }
+
   const rateLimitSegments = [];
-  if (rateLimitPct != null) rateLimitSegments.push(usagePct(Number(rateLimitPct), '5h'));
+  if (rateLimitPct != null) {
+    rateLimitSegments.push(usagePct(Number(rateLimitPct), '5h') + resetBracket(rateLimitResetsAt));
+  }
   if (weekLimitPct != null) {
-    const resetIn = formatResetIn(weekLimitResetsAt);
-    const resetPart = resetIn ? ` ${fg24(150, 150, 150)}(${resetIn})${RESET}` : '';
-    rateLimitSegments.push(usagePct(Number(weekLimitPct), '7d') + resetPart);
+    rateLimitSegments.push(usagePct(Number(weekLimitPct), '7d') + resetBracket(weekLimitResetsAt));
   }
   const rateLimitsPart = rateLimitSegments.join(DOT);
 
