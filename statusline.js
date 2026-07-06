@@ -114,6 +114,19 @@ process.stdin.on('end', () => {
     return `${labelPart}${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
+  function formatResetIn(resetsAtSec) {
+    if (resetsAtSec == null) return '';
+    const diffMs = resetsAtSec * 1000 - Date.now();
+    if (diffMs <= 0) return '0m';
+    const totalMin = Math.round(diffMs / 60000);
+    const days = Math.floor(totalMin / (60 * 24));
+    const hours = Math.floor((totalMin % (60 * 24)) / 60);
+    const mins = totalMin % 60;
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+  }
+
   function usagePct(rawPct, label) {
     const pct = Math.max(0, Math.min(100, rawPct));
     const pctInt = Math.round(pct);
