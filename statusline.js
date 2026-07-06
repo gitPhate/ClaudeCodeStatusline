@@ -137,7 +137,18 @@ process.stdin.on('end', () => {
 
   const repoPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
 
-  const branchPart = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (${branch})${RESET}` : '';
+  const dirtyPart = branch
+    ? [
+        staged > 0 ? `${fg24(0, 200, 80)}+${staged}${RESET}` : '',
+        modified > 0 ? `${fg24(230, 180, 20)}~${modified}${RESET}` : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : '';
+
+  const branchPart = branch
+    ? `\x1b[1m${fg24(0, 215, 215)}🌿 (${branch})${RESET}${dirtyPart ? ' ' + dirtyPart : ''}`
+    : '';
 
   const contextPart = usageTrio(usedPct, 'ctx');
 
