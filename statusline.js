@@ -43,6 +43,26 @@ process.stdin.on('end', () => {
     return Math.round(a + (b - a) * t);
   }
 
+  // Color for the block at position `idx` out of `total`, along a fixed
+  // green -> yellow -> red gradient spanning the whole bar (position-based,
+  // not value-based), same idea as the AKCodez gradient progress bar gist.
+  function gradientBlockColor(idx, total) {
+    const t = total > 1 ? idx / (total - 1) : 0;
+    let r, g, b;
+    if (t <= 0.5) {
+      const tt = t / 0.5;
+      r = lerp(0, 220, tt);
+      g = lerp(200, 200, tt);
+      b = lerp(80, 0, tt);
+    } else {
+      const tt = (t - 0.5) / 0.5;
+      r = lerp(220, 220, tt);
+      g = lerp(200, 40, tt);
+      b = lerp(0, 20, tt);
+    }
+    return [r, g, b];
+  }
+
   function usageTrio(rawPct) {
     const pct = Math.max(0, Math.min(100, rawPct));
     const pctInt = Math.round(pct);
@@ -50,19 +70,6 @@ process.stdin.on('end', () => {
     const totalBlocks = 20;
     const filled = Math.max(0, Math.min(totalBlocks, Math.round((pct / 100) * totalBlocks)));
     const empty = totalBlocks - filled;
-
-    let fr, fg, fb;
-    if (pct <= 50) {
-      const t = pct / 50;
-      fr = lerp(0, 220, t);
-      fg = lerp(200, 200, t);
-      fb = lerp(80, 0, t);
-    } else {
-      const t = (pct - 50) / 50;
-      fr = lerp(220, 220, t);
-      fg = lerp(200, 40, t);
-      fb = lerp(0, 20, t);
-    }
 
     let emoji, lr, lg, lb;
     if (pctInt < 20) {
@@ -79,16 +86,20 @@ process.stdin.on('end', () => {
       [lr, lg, lb] = [220, 40, 20];
     }
 
-    const filledBar = '█'.repeat(filled);
-    const emptyBar = '█'.repeat(empty);
-    const bar = `${fg24(fr, fg, fb)}${filledBar}${fg24(60, 60, 60)}${emptyBar}${RESET}`;
+    let filledBar = '';
+    for (let i = 0; i < filled; i++) {
+      const [r, g, b] = gradientBlockColor(i, totalBlocks);
+      filledBar += `${fg24(r, g, b)}█`;
+    }
+    const emptyBar = `${fg24(60, 60, 60)}${'█'.repeat(empty)}`;
+    const bar = `${filledBar}${emptyBar}${RESET}`;
 
     return `${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
   const repoPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
 
-  const branchPart = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿(${branch})${RESET}` : '';
+  const branchPart = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (${branch})${RESET}` : '';
 
   const contextPart = usageTrio(usedPct);
 
