@@ -99,6 +99,28 @@ process.stdin.on('end', () => {
     return `${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
+  function usagePct(rawPct) {
+    const pct = Math.max(0, Math.min(100, rawPct));
+    const pctInt = Math.round(pct);
+
+    let emoji, lr, lg, lb;
+    if (pctInt < 20) {
+      emoji = '🟢';
+      [lr, lg, lb] = [0, 200, 80];
+    } else if (pctInt < 70) {
+      emoji = '⚡️';
+      [lr, lg, lb] = [230, 180, 20];
+    } else if (pctInt < 90) {
+      emoji = '🔥';
+      [lr, lg, lb] = [230, 100, 20];
+    } else {
+      emoji = '🚨';
+      [lr, lg, lb] = [220, 40, 20];
+    }
+
+    return `${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
+  }
+
   const repoPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
 
   const branchPart = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (${branch})${RESET}` : '';
