@@ -127,7 +127,7 @@ process.stdin.on('end', () => {
 
   const branchPart = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (${branch})${RESET}` : '';
 
-  const contextPart = usageTrio(usedPct);
+  const contextPart = usageTrio(usedPct, 'ctx');
 
   const velocityPart = `${fg24(0, 200, 80)}+${added}${RESET} ${fg24(220, 40, 20)}-${removed}${RESET}`;
 
