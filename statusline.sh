@@ -71,7 +71,7 @@ read -r fr fg fb <<< "$color_line"
 if [ "$pct_int" -lt 20 ]; then
   emoji="🟢"; lr=0; lg=200; lb=80
 elif [ "$pct_int" -lt 70 ]; then
-  emoji="⚡"; lr=230; lg=180; lb=20
+  emoji="⚡️"; lr=230; lg=180; lb=20
 elif [ "$pct_int" -lt 90 ]; then
   emoji="🔥"; lr=230; lg=100; lb=20
 else
