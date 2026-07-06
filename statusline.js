@@ -136,7 +136,7 @@ process.stdin.on('end', () => {
 
   const modelPart = `${fg24(200, 80, 220)}🤖 ${model}${effortPart}${RESET}`;
 
-  const parts = [repoPart, branchPart, contextPart, velocityPart, rateLimitPart, modelPart].filter(Boolean);
+  const parts = [repoPart, branchPart, contextPart, velocityPart, rateLimitPart, weekLimitPart, modelPart].filter(Boolean);
 
   process.stdout.write(parts.join(SEP) + '\n');
 });
