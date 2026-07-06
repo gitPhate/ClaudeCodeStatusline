@@ -65,7 +65,7 @@ process.stdin.on('end', () => {
     return [r, g, b];
   }
 
-  function usageTrio(rawPct) {
+  function usageTrio(rawPct, label) {
     const pct = Math.max(0, Math.min(100, rawPct));
     const pctInt = Math.round(pct);
 
