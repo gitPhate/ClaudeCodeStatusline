@@ -99,7 +99,7 @@ process.stdin.on('end', () => {
     return `${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
-  function usagePct(rawPct) {
+  function usagePct(rawPct, label) {
     const pct = Math.max(0, Math.min(100, rawPct));
     const pctInt = Math.round(pct);
 
@@ -118,7 +118,8 @@ process.stdin.on('end', () => {
       [lr, lg, lb] = [220, 40, 20];
     }
 
-    return `${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
+    const labelPart = label ? `${fg24(150, 150, 150)}${label} ${RESET}` : '';
+    return `${labelPart}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
   const repoPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
