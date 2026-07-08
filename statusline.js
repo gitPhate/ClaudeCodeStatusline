@@ -152,6 +152,12 @@ process.stdin.on('end', () => {
     return `${labelPart}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
+  function formatTokenCount(n) {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+    return String(n);
+  }
+
   const folderPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
 
   const leafName = path.basename(cwd);
