@@ -19,6 +19,7 @@ process.stdin.on('end', () => {
   const cwd = input?.workspace?.current_dir || input?.cwd || '.';
   const repoNameFromInput = input?.workspace?.repo?.name;
   const usedPct = Number(input?.context_window?.used_percentage ?? 0) || 0;
+  const totalInputTokens = Number(input?.context_window?.total_input_tokens ?? 0) || 0;
   const added = Number(input?.cost?.total_lines_added ?? 0) || 0;
   const removed = Number(input?.cost?.total_lines_removed ?? 0) || 0;
   const rateLimitPct = input?.rate_limits?.five_hour?.used_percentage;
