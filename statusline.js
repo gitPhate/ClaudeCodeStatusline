@@ -35,23 +35,30 @@ process.stdin.on('end', () => {
   const repoName = repoNameFromInput || path.basename(cwd);
 
   let branch = '';
-  let staged = 0;
   let modified = 0;
+  let untracked = 0;
+  let added = 0;
+  let deleted = 0;
   try {
     execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' });
     branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
       .toString()
       .trim();
-    staged = execSync('git diff --cached --numstat', { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
+    const statusLines = execSync('git status --porcelain --untracked-files=all', {
+      cwd,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
       .toString()
-      .trim()
       .split('\n')
-      .filter(Boolean).length;
-    modified = execSync('git diff --numstat', { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
-      .toString()
-      .trim()
-      .split('\n')
-      .filter(Boolean).length;
+      .filter(Boolean);
+    for (const line of statusLines) {
+      const x = line[0];
+      const y = line[1];
+      if (x === '?' && y === '?') untracked++;
+      else if (x === 'D' || y === 'D') deleted++;
+      else if (x === 'A' || y === 'A') added++;
+      else if ('MRC'.includes(x) || 'MRC'.includes(y)) modified++;
+    }
   } catch {
     branch = '';
   }
