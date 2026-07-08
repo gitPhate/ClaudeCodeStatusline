@@ -209,7 +209,11 @@ process.stdin.on('end', () => {
   const durationSec = Math.floor(durationMs / 1000);
   const durationMin = Math.floor(durationSec / 60);
   const durationSecRem = durationSec % 60;
-  const clockPart = `${fg24(150, 150, 150)}⏱️ ${durationMin}m ${durationSecRem}s${RESET}`;
+  const durationHours = Math.floor(durationMin / 60);
+  const durationMinRem = durationMin % 60;
+  const durationStr =
+    durationHours > 0 ? `${durationHours}h ${durationMinRem}m` : `${durationMin}m ${durationSecRem}s`;
+  const clockPart = `${fg24(150, 150, 150)}⏱️ ${durationStr}${RESET}`;
 
   const parts = [repoPart, contextPart, velocityPart, rateLimitsPart, clockPart, modelPart].filter(Boolean);
 
