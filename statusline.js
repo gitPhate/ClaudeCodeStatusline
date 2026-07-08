@@ -224,9 +224,9 @@ process.stdin.on('end', () => {
     durationHours > 0 ? `${durationHours}h ${durationMinRem}m` : `${durationMin}m ${durationSecRem}s`;
   const clockPart = `${fg24(150, 150, 150)}⏱️ ${durationStr}${RESET}`;
 
-  const contextModelPart = [contextPart, modelPart].filter(Boolean).join(' ');
+  const modelContextPart = [modelPart, contextPart].filter(Boolean).join(' ');
 
-  const parts = [contextModelPart, velocityPart, rateLimitsPart, clockPart, repoPart].filter(Boolean);
+  const parts = [modelContextPart, repoPart, velocityPart, rateLimitsPart, clockPart].filter(Boolean);
 
   process.stdout.write(parts.join(SEP) + '\n');
 });
