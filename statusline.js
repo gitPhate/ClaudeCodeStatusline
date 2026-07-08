@@ -176,7 +176,7 @@ process.stdin.on('end', () => {
 
   const repoPart = [folderPart, leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
 
-  const contextPart = usageTrio(usedPct, 'ctx');
+  const contextPart = usageTrio(usedPct, formatTokenCount(totalInputTokens));
 
   const velocityPart = `${fg24(150, 150, 150)}lines ${RESET}${fg24(0, 200, 80)}+${added}${RESET} ${fg24(220, 40, 20)}-${removed}${RESET}`;
 
