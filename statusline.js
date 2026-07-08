@@ -23,8 +23,8 @@ process.stdin.on('end', () => {
   const maxContextTokens =
     Number(input?.context_window?.max_tokens ?? input?.context_window?.context_window_size ?? 0) ||
     (usedPct > 0 ? Math.round(totalInputTokens / (usedPct / 100)) : 0);
-  const added = Number(input?.cost?.total_lines_added ?? 0) || 0;
-  const removed = Number(input?.cost?.total_lines_removed ?? 0) || 0;
+  const linesAdded = Number(input?.cost?.total_lines_added ?? 0) || 0;
+  const linesRemoved = Number(input?.cost?.total_lines_removed ?? 0) || 0;
   const rateLimitPct = input?.rate_limits?.five_hour?.used_percentage;
   const weekLimitPct = input?.rate_limits?.seven_day?.used_percentage;
   const rateLimitResetsAt = input?.rate_limits?.five_hour?.resets_at;
