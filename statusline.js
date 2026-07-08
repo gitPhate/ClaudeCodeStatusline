@@ -227,7 +227,9 @@ process.stdin.on('end', () => {
 
   const modelContextPart = [modelPart, contextPart].filter(Boolean).join(' ');
 
-  const parts = [modelContextPart, repoPart, velocityPart, rateLimitsPart, clockPart].filter(Boolean);
+  const costPart = totalCostUsd > 0 ? `${fg24(150, 150, 150)}💵 $${totalCostUsd.toFixed(2)}${RESET}` : '';
+
+  const parts = [modelContextPart, repoPart, velocityPart, rateLimitsPart, clockPart, costPart].filter(Boolean);
 
   process.stdout.write(parts.join(SEP) + '\n');
 });
