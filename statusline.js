@@ -180,8 +180,8 @@ process.stdin.on('end', () => {
   const repoPart = [folderPart, leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
 
   const contextLabel = maxContextTokens
-    ? `🧠 ${formatTokenCount(totalInputTokens)}/${formatTokenCount(maxContextTokens)}`
-    : `🧠 ${formatTokenCount(totalInputTokens)}`;
+    ? `🪟 ${formatTokenCount(totalInputTokens)}/${formatTokenCount(maxContextTokens)}`
+    : `🪟 ${formatTokenCount(totalInputTokens)}`;
   const contextPart = usageTrio(usedPct, contextLabel);
 
   const velocityPart = `${fg24(150, 150, 150)}lines ${RESET}${fg24(0, 200, 80)}+${added}${RESET} ${fg24(220, 40, 20)}-${removed}${RESET}`;
