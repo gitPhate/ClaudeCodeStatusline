@@ -175,8 +175,10 @@ process.stdin.on('end', () => {
 
   const dirtyPart = branch
     ? [
-        staged > 0 ? `${fg24(0, 200, 80)}+${staged}${RESET}` : '',
         modified > 0 ? `${fg24(230, 180, 20)}~${modified}${RESET}` : '',
+        untracked > 0 ? `${fg24(150, 150, 150)}?${untracked}${RESET}` : '',
+        added > 0 ? `${fg24(0, 200, 80)}+${added}${RESET}` : '',
+        deleted > 0 ? `${fg24(220, 40, 20)}-${deleted}${RESET}` : '',
       ]
         .filter(Boolean)
         .join(' ')
