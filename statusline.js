@@ -31,6 +31,7 @@ process.stdin.on('end', () => {
   const weekLimitResetsAt = input?.rate_limits?.seven_day?.resets_at;
   const effortLevel = input?.effort?.level || '';
   const durationMs = Number(input?.cost?.total_duration_ms ?? 0) || 0;
+  const totalCostUsd = Number(input?.cost?.total_cost_usd ?? 0) || 0;
 
   const repoName = repoNameFromInput || path.basename(cwd);
 
