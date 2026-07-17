@@ -92,12 +92,15 @@ process.stdin.on('end', () => {
     return [r, g, b];
   }
 
-  function usageTrio(rawPct, label) {
+  // `totalBlocks` controls how many of the (up to 20) gradient blocks are
+  // drawn — the bar shrinks by lowering this, while filled/empty and the
+  // gradient colors are recomputed from scratch so the redraw always looks
+  // right at any size, down to 0 (no bar, just the label/emoji/percentage).
+  function usageTrio(rawPct, label, totalBlocks = 20) {
     const pct = Math.max(0, Math.min(100, rawPct));
     const pctInt = Math.round(pct);
 
-    const totalBlocks = 20;
-    const filled = Math.max(0, Math.min(totalBlocks, Math.round((pct / 100) * totalBlocks)));
+    const filled = totalBlocks > 0 ? Math.max(0, Math.min(totalBlocks, Math.round((pct / 100) * totalBlocks))) : 0;
     const empty = totalBlocks - filled;
 
     let emoji, lr, lg, lb;
@@ -120,11 +123,13 @@ process.stdin.on('end', () => {
       const [r, g, b] = gradientBlockColor(i, totalBlocks);
       filledBar += `${fg24(r, g, b)}█`;
     }
-    const emptyBar = `${fg24(60, 60, 60)}${'█'.repeat(empty)}`;
+    const emptyBar = empty > 0 ? `${fg24(60, 60, 60)}${'█'.repeat(empty)}` : '';
     const bar = `${filledBar}${emptyBar}${RESET}`;
 
     const labelPart = label ? `${fg24(150, 150, 150)}${label} ${RESET}` : '';
-    return `${labelPart}${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
+    return totalBlocks > 0
+      ? `${labelPart}${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`
+      : `${labelPart}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
 
   function formatResetIn(resetsAtSec) {
@@ -191,10 +196,10 @@ process.stdin.on('end', () => {
         i += m[0].length;
         continue;
       }
-      if (visible >= maxWidth) break;
       const code = str.charCodeAt(i);
       const isHighSurrogate = code >= 0xd800 && code <= 0xdbff && i + 1 < str.length;
       const chunk = isHighSurrogate ? str.slice(i, i + 2) : str[i];
+      if (visible + chunk.length > maxWidth) break;
       out += chunk;
       visible += chunk.length;
       i += chunk.length;
@@ -226,7 +231,6 @@ process.stdin.on('end', () => {
   const contextLabel = maxContextTokens
     ? `🪟 ${formatTokenCount(totalInputTokens)}/${formatTokenCount(maxContextTokens)}`
     : `🪟 ${formatTokenCount(totalInputTokens)}`;
-  const contextPart = usageTrio(usedPct, contextLabel);
 
   const velocityPart = `${fg24(150, 150, 150)}lines ${RESET}${fg24(0, 200, 80)}+${linesAdded}${RESET} ${fg24(220, 40, 20)}-${linesRemoved}${RESET}`;
 
@@ -258,8 +262,6 @@ process.stdin.on('end', () => {
   const durationStr =
     durationHours > 0 ? `${durationHours}h ${durationMinRem}m` : `${durationMin}m ${durationSecRem}s`;
   const clockPart = `${fg24(150, 150, 150)}⏱️ ${durationStr}${RESET}`;
-
-  const modelContextPart = [modelPart, contextPart].filter(Boolean).join(' ');
 
   const costPart = totalCostUsd > 0 ? `${fg24(150, 150, 150)}💵 $${totalCostUsd.toFixed(2)}${RESET}` : '';
 
@@ -309,6 +311,34 @@ process.stdin.on('end', () => {
     const keep = Math.max(0, available - 1);
     return keep > 0 ? `${text.slice(0, keep)}…` : '…';
   }
+
+  // Context bar shrinks before anything else, by drawing fewer of its (up to
+  // 20) blocks — sized against the full label/percentage plus the full,
+  // untruncated branch and repo name, since those only shrink afterward if
+  // shrinking the bar down to nothing still isn't enough.
+  const MAX_BAR_BLOCKS = 20;
+  const contextPartZeroBar = usageTrio(usedPct, contextLabel, 0);
+  const modelContextPartZeroBar = [modelPart, contextPartZeroBar].filter(Boolean).join(' ');
+  const branchPlaceholderForBar = branch ? `${branchPrefix}${branch}${branchSuffix}` : '';
+  const repoPartForBar = [styledRepoName(repoName), leafPart, branchPlaceholderForBar, dirtyPart]
+    .filter(Boolean)
+    .join(' ');
+  const otherPartsForBar = [
+    modelContextPartZeroBar,
+    repoPartForBar,
+    velocityPart,
+    rateLimitsPart,
+    clockPart,
+    costPart,
+  ].filter(Boolean);
+  const lengthWithoutBar = stripAnsi(otherPartsForBar.join(SEP)).length;
+  // Drawing 1+ blocks (vs. none) reintroduces an extra separating space
+  // between the bar and the percentage, so N blocks cost N+1 chars relative
+  // to the zero-bar baseline, not N.
+  const barBudget = terminalWidth - safetyMargin - lengthWithoutBar - 1;
+  const barBlocks = Math.max(0, Math.min(MAX_BAR_BLOCKS, barBudget));
+  const contextPart = usageTrio(usedPct, contextLabel, barBlocks);
+  const modelContextPart = [modelPart, contextPart].filter(Boolean).join(' ');
 
   // Branch shrinks first, sized against the full (untruncated) repo name.
   const branchPlaceholder = branch ? `${branchPrefix}${branchSuffix}` : '';

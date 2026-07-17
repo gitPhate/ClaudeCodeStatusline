@@ -9,7 +9,7 @@ A custom status line for [Claude Code](https://docs.claude.com/en/docs/claude-co
 Reading left to right:
 
 - 🤖 **Model** — display name, plus the reasoning effort level in parentheses when set (e.g. `Sonnet 5 (high)`)
-- 🪟 **Context usage** — a 20-block gradient bar (green → yellow → red) with tokens used vs. max context window
+- 🪟 **Context usage** — a gradient bar (green → yellow → red, up to 20 blocks) with tokens used vs. max context window
 - **Repo & branch** — repo name, current directory leaf (if different from the repo root), and the git branch, prefixed with 🌿
 - **Dirty status** — counts of modified (`~`), untracked (`?`), added (`+`), and deleted (`-`) files
 - **Lines changed** — `+added`/`-removed` line counts for the session
@@ -19,13 +19,19 @@ Reading left to right:
 
 Colors and emoji thresholds scale automatically: usage under 20% is green, 20–70% is yellow/⚡️, 70–90% is orange/🔥, and 90%+ is red/🚨.
 
-The branch name and repo name are truncated dynamically (with `…`) so the whole line always fits within the terminal width. Terminal width is detected from the `COLUMNS` environment variable Claude Code provides (since the script's stdout isn't a TTY, `process.stdout.columns` isn't available), falling back to parsing `mode con` on Windows when `COLUMNS` is unset, and finally a hardcoded 120 if neither is available. A fixed margin also accounts for the few columns of chrome Claude Code itself reserves around the rendered statusline row.
+The context bar, branch name, and repo name all shrink dynamically so the whole line always fits within the terminal width. Terminal width is detected from the `COLUMNS` environment variable Claude Code provides (since the script's stdout isn't a TTY, `process.stdout.columns` isn't available), falling back to parsing `mode con` on Windows when `COLUMNS` is unset, and finally a hardcoded 120 if neither is available. A fixed margin also accounts for the few columns of chrome Claude Code itself reserves around the rendered statusline row.
 
-When the line is still too long, the **branch name shrinks first** (sized against the full, untruncated repo name); if that alone isn't enough to make room, the **repo name shrinks second** against whatever budget is left. A final whole-line safety net hard-truncates the entire rendered line as a last resort, so it can never overflow and get cut off mid-segment by the terminal itself.
+When the line is too long, three things shrink in order, each only kicking in once the previous one can't free up enough room on its own:
+
+1. **The context bar shrinks first**, by drawing fewer of its (up to 20) blocks — fully redrawn at every size, not just cut off, so the fill proportion and gradient colors are always correct — down to 0 blocks (just the label, emoji, and percentage) if needed.
+2. **The branch name shrinks second** (with a `…`), sized against the full, untruncated repo name.
+3. **The repo name shrinks third** (with a `…`), against whatever budget is left once the branch is already final.
+
+A final whole-line safety net hard-truncates the entire rendered line as a last resort, so it can never overflow and get cut off mid-segment by the terminal itself.
 
 ## Files
 
-- **`statusline.js`** — the primary, actively maintained implementation (Node.js, no dependencies beyond built-ins). Includes rate limits, effort level, session duration, cost, and dynamic branch/repo-name truncation.
+- **`statusline.js`** — the primary, actively maintained implementation (Node.js, no dependencies beyond built-ins). Includes rate limits, effort level, session duration, cost, and dynamic context-bar/branch/repo-name shrinking to fit the terminal width.
 - **`statusline.sh`** ⚠️ **obsolete** — an earlier, simpler bash/jq/awk implementation covering only the core repo/branch/context/cost/velocity/model segments. Superseded by `statusline.js`, which has since gained rate limits, effort level, session duration, dirty-status breakdown, and dynamic branch truncation that were never ported back to the bash version. Kept around for reference only; not recommended for new setups.
 
 ## Requirements
