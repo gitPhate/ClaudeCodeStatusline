@@ -169,6 +169,11 @@ process.stdin.on('end', () => {
     return String(n);
   }
 
+  function truncateBranch(name, maxLen = 32) {
+    if (!name || name.length <= maxLen) return name;
+    return `${name.slice(0, maxLen - 3)}...`;
+  }
+
   const folderPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
 
   const leafName = path.basename(cwd);
