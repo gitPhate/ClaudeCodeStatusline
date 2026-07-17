@@ -234,8 +234,11 @@ process.stdin.on('end', () => {
 
   // Determine how much room is left for the branch name so the WHOLE status
   // line fits within the terminal width, instead of a fixed character cap.
-  const terminalWidth =
-    (process.stdout.columns && process.stdout.columns > 0 ? process.stdout.columns : 0) || 120;
+  // Claude Code captures this script's stdout rather than connecting it to the
+  // terminal, so process.stdout.columns is always undefined here — the real
+  // width comes via the COLUMNS env var Claude Code sets before invoking us.
+  const envColumns = parseInt(process.env.COLUMNS, 10);
+  const terminalWidth = envColumns > 0 ? envColumns : 120;
   const safetyMargin = 1;
 
   const branchPlaceholder = branch ? `${branchPrefix}${branchSuffix}` : '';
