@@ -232,6 +232,42 @@ process.stdin.on('end', () => {
 
   const costPart = totalCostUsd > 0 ? `${fg24(150, 150, 150)}💵 $${totalCostUsd.toFixed(2)}${RESET}` : '';
 
+  // Determine how much room is left for the branch name so the WHOLE status
+  // line fits within the terminal width, instead of a fixed character cap.
+  const terminalWidth =
+    (process.stdout.columns && process.stdout.columns > 0 ? process.stdout.columns : 0) || 120;
+  const safetyMargin = 1;
+
+  const branchPlaceholder = branch ? `${branchPrefix}${branchSuffix}` : '';
+  const repoPartWithoutBranchName = [folderPart, leafPart, branchPlaceholder, dirtyPart]
+    .filter(Boolean)
+    .join(' ');
+
+  const otherParts = [
+    modelContextPart,
+    repoPartWithoutBranchName,
+    velocityPart,
+    rateLimitsPart,
+    clockPart,
+    costPart,
+  ].filter(Boolean);
+  const baseLineVisibleLength = stripAnsi(otherParts.join(SEP)).length;
+
+  let truncatedBranch = branch;
+  if (branch) {
+    const available = terminalWidth - baseLineVisibleLength - safetyMargin;
+    if (available <= 0) {
+      truncatedBranch = '...';
+    } else if (branch.length > available) {
+      const keep = Math.max(0, available - 3);
+      truncatedBranch = keep > 0 ? `${branch.slice(0, keep)}...` : '...';
+    }
+  }
+
+  const branchPart = branch ? `${branchPrefix}${truncatedBranch}${branchSuffix}` : '';
+
+  const repoPart = [folderPart, leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
+
   const parts = [modelContextPart, repoPart, velocityPart, rateLimitsPart, clockPart, costPart].filter(Boolean);
 
   process.stdout.write(parts.join(SEP) + '\n');
