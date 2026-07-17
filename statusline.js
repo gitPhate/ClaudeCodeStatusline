@@ -202,7 +202,9 @@ process.stdin.on('end', () => {
     return out;
   }
 
-  const folderPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
+  function styledRepoName(name) {
+    return `\x1b[1m${fg24(230, 200, 50)}${name}${RESET}`;
+  }
 
   const leafName = path.basename(cwd);
   const leafPart = leafName && leafName !== repoName ? `${fg24(150, 150, 150)}/${leafName}${RESET}` : '';
@@ -297,14 +299,25 @@ process.stdin.on('end', () => {
   // Code claims for itself regardless of what we report as the line length.
   const safetyMargin = 4;
 
+  // Truncates `text` to at most `available` visible characters, appending a
+  // single-character ellipsis instead of the removed tail. Used for both the
+  // branch name and the repo name, whichever needs to shrink to make the
+  // whole line fit the terminal width.
+  function truncateToFit(text, available) {
+    if (available <= 0) return '…';
+    if (text.length <= available) return text;
+    const keep = Math.max(0, available - 1);
+    return keep > 0 ? `${text.slice(0, keep)}…` : '…';
+  }
+
+  // Branch shrinks first, sized against the full (untruncated) repo name.
   const branchPlaceholder = branch ? `${branchPrefix}${branchSuffix}` : '';
-  const repoPartWithoutBranchName = [folderPart, leafPart, branchPlaceholder, dirtyPart]
+  const repoPartWithBranchPlaceholder = [styledRepoName(repoName), leafPart, branchPlaceholder, dirtyPart]
     .filter(Boolean)
     .join(' ');
-
   const otherParts = [
     modelContextPart,
-    repoPartWithoutBranchName,
+    repoPartWithBranchPlaceholder,
     velocityPart,
     rateLimitsPart,
     clockPart,
@@ -312,18 +325,26 @@ process.stdin.on('end', () => {
   ].filter(Boolean);
   const baseLineVisibleLength = stripAnsi(otherParts.join(SEP)).length;
 
-  let truncatedBranch = branch;
-  if (branch) {
-    const available = terminalWidth - baseLineVisibleLength - safetyMargin;
-    if (available <= 0) {
-      truncatedBranch = '…';
-    } else if (branch.length > available) {
-      const keep = Math.max(0, available - 1);
-      truncatedBranch = keep > 0 ? `${branch.slice(0, keep)}…` : '…';
-    }
-  }
-
+  const truncatedBranch = branch
+    ? truncateToFit(branch, terminalWidth - baseLineVisibleLength - safetyMargin)
+    : branch;
   const branchPart = branch ? `${branchPrefix}${truncatedBranch}${branchSuffix}` : '';
+
+  // Repo name shrinks second, against the actual remaining budget once the
+  // branch above is already final — so a short repo name only gets
+  // truncated if shrinking the branch alone still wasn't enough.
+  const repoPartPlaceholder = [styledRepoName(''), leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
+  const partsWithRepoPlaceholder = [
+    modelContextPart,
+    repoPartPlaceholder,
+    velocityPart,
+    rateLimitsPart,
+    clockPart,
+    costPart,
+  ].filter(Boolean);
+  const lengthWithoutRepoName = stripAnsi(partsWithRepoPlaceholder.join(SEP)).length;
+  const truncatedRepoName = truncateToFit(repoName, terminalWidth - lengthWithoutRepoName - safetyMargin);
+  const folderPart = styledRepoName(truncatedRepoName);
 
   const repoPart = [folderPart, leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
 
