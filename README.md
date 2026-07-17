@@ -19,11 +19,13 @@ Reading left to right:
 
 Colors and emoji thresholds scale automatically: usage under 20% is green, 20–70% is yellow/⚡️, 70–90% is orange/🔥, and 90%+ is red/🚨.
 
-The branch name is truncated dynamically (with `...`) so the whole line always fits within the terminal width, read from the `COLUMNS` environment variable that Claude Code provides (since the script's stdout isn't a TTY, `process.stdout.columns` isn't available).
+The branch name and repo name are truncated dynamically (with `…`) so the whole line always fits within the terminal width. Terminal width is detected from the `COLUMNS` environment variable Claude Code provides (since the script's stdout isn't a TTY, `process.stdout.columns` isn't available), falling back to parsing `mode con` on Windows when `COLUMNS` is unset, and finally a hardcoded 120 if neither is available. A fixed margin also accounts for the few columns of chrome Claude Code itself reserves around the rendered statusline row.
+
+When the line is still too long, the **branch name shrinks first** (sized against the full, untruncated repo name); if that alone isn't enough to make room, the **repo name shrinks second** against whatever budget is left. A final whole-line safety net hard-truncates the entire rendered line as a last resort, so it can never overflow and get cut off mid-segment by the terminal itself.
 
 ## Files
 
-- **`statusline.js`** — the primary, actively maintained implementation (Node.js, no dependencies beyond built-ins). Includes rate limits, effort level, session duration, cost, and dynamic branch truncation.
+- **`statusline.js`** — the primary, actively maintained implementation (Node.js, no dependencies beyond built-ins). Includes rate limits, effort level, session duration, cost, and dynamic branch/repo-name truncation.
 - **`statusline.sh`** ⚠️ **obsolete** — an earlier, simpler bash/jq/awk implementation covering only the core repo/branch/context/cost/velocity/model segments. Superseded by `statusline.js`, which has since gained rate limits, effort level, session duration, dirty-status breakdown, and dynamic branch truncation that were never ported back to the bash version. Kept around for reference only; not recommended for new setups.
 
 ## Requirements
