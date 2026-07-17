@@ -189,9 +189,8 @@ process.stdin.on('end', () => {
         .join(' ')
     : '';
 
-  const branchPart = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (${truncateBranch(branch)})${RESET}` : '';
-
-  const repoPart = [folderPart, leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
+  const branchPrefix = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (` : '';
+  const branchSuffix = branch ? `)${RESET}` : '';
 
   const contextLabel = maxContextTokens
     ? `🪟 ${formatTokenCount(totalInputTokens)}/${formatTokenCount(maxContextTokens)}`
