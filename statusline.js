@@ -173,6 +173,35 @@ process.stdin.on('end', () => {
     return str.replace(/\x1b\[[0-9;]*m/g, '');
   }
 
+  // Truncates an ANSI-colored string to at most `maxWidth` visible columns,
+  // preserving escape sequences (which contribute 0 width) intact. Used as a
+  // last-resort safety net so the whole line can never overflow the terminal,
+  // regardless of which segment's width estimate was wrong.
+  function truncateAnsiToWidth(str, maxWidth) {
+    if (maxWidth <= 0) return '';
+    let visible = 0;
+    let out = '';
+    let i = 0;
+    const ansiRe = /\x1b\[[0-9;]*m/y;
+    while (i < str.length) {
+      ansiRe.lastIndex = i;
+      const m = ansiRe.exec(str);
+      if (m) {
+        out += m[0];
+        i += m[0].length;
+        continue;
+      }
+      if (visible >= maxWidth) break;
+      const code = str.charCodeAt(i);
+      const isHighSurrogate = code >= 0xd800 && code <= 0xdbff && i + 1 < str.length;
+      const chunk = isHighSurrogate ? str.slice(i, i + 2) : str[i];
+      out += chunk;
+      visible += chunk.length;
+      i += chunk.length;
+    }
+    return out;
+  }
+
   const folderPart = `\x1b[1m${fg24(230, 200, 50)}${repoName}${RESET}`;
 
   const leafName = path.basename(cwd);
@@ -236,10 +265,37 @@ process.stdin.on('end', () => {
   // line fits within the terminal width, instead of a fixed character cap.
   // Claude Code captures this script's stdout rather than connecting it to the
   // terminal, so process.stdout.columns is always undefined here — the real
-  // width comes via the COLUMNS env var Claude Code sets before invoking us.
-  const envColumns = parseInt(process.env.COLUMNS, 10);
-  const terminalWidth = envColumns > 0 ? envColumns : 120;
-  const safetyMargin = 1;
+  // width normally comes via the COLUMNS env var Claude Code sets before
+  // invoking us, with a Windows console fallback below when that's missing.
+  function detectTerminalWidth() {
+    const envColumns = parseInt(process.env.COLUMNS, 10);
+    if (envColumns > 0) return envColumns;
+
+    // COLUMNS is a shell-exported variable (bash/zsh convention). It's not a
+    // standard Windows environment variable, so when this script is invoked
+    // through cmd.exe/PowerShell rather than a bash-like shell it may simply
+    // be absent. Ask the console directly in that case before giving up.
+    if (process.platform === 'win32') {
+      try {
+        const out = execSync('mode con', { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+        const match = out.match(/Columns:\s*(\d+)/i);
+        const cols = match ? parseInt(match[1], 10) : NaN;
+        if (cols > 0) return cols;
+      } catch {
+        // no attached console (e.g. output is fully redirected) — fall through
+      }
+    }
+
+    return 120;
+  }
+
+  const terminalWidth = detectTerminalWidth();
+  // Claude Code reserves its own chrome around the rendered statusline row
+  // (measured empirically: a 209-column terminal only rendered 205 columns
+  // of content before Claude Code applied its own cutoff) — this isn't a
+  // fudge factor for our own width-estimation error, it's content Claude
+  // Code claims for itself regardless of what we report as the line length.
+  const safetyMargin = 4;
 
   const branchPlaceholder = branch ? `${branchPrefix}${branchSuffix}` : '';
   const repoPartWithoutBranchName = [folderPart, leafPart, branchPlaceholder, dirtyPart]
@@ -260,10 +316,10 @@ process.stdin.on('end', () => {
   if (branch) {
     const available = terminalWidth - baseLineVisibleLength - safetyMargin;
     if (available <= 0) {
-      truncatedBranch = '...';
+      truncatedBranch = '…';
     } else if (branch.length > available) {
-      const keep = Math.max(0, available - 3);
-      truncatedBranch = keep > 0 ? `${branch.slice(0, keep)}...` : '...';
+      const keep = Math.max(0, available - 1);
+      truncatedBranch = keep > 0 ? `${branch.slice(0, keep)}…` : '…';
     }
   }
 
@@ -273,5 +329,17 @@ process.stdin.on('end', () => {
 
   const parts = [modelContextPart, repoPart, velocityPart, rateLimitsPart, clockPart, costPart].filter(Boolean);
 
-  process.stdout.write(parts.join(SEP) + '\n');
+  let finalLine = parts.join(SEP);
+
+  // Final safety net: even if the branch-name truncation above under-estimated
+  // (stale/unavailable terminal width, emoji-width quirks, etc.), make sure the
+  // rendered line can never overflow the terminal and get hard-cut mid-segment
+  // by it. This trims from the right (rather than the branch) as a last resort.
+  const finalVisibleLength = stripAnsi(finalLine).length;
+  const hardBudget = terminalWidth - safetyMargin;
+  if (hardBudget > 0 && finalVisibleLength > hardBudget) {
+    finalLine = truncateAnsiToWidth(finalLine, Math.max(0, hardBudget - 1)) + RESET + '…';
+  }
+
+  process.stdout.write(finalLine + '\n');
 });
