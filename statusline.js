@@ -5,6 +5,17 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
+// Bump on every non-temporary change (semver: major.minor.patch). Since the
+// live copy at ~/.claude/statusline.js and this repo copy must always be
+// kept in sync, `node statusline.js --version` lets you confirm which
+// version a given copy is running without reading its source.
+const SCRIPT_VERSION = '1.0.0';
+
+if (process.argv.includes('--version')) {
+  process.stdout.write(`${SCRIPT_VERSION}\n`);
+  process.exit(0);
+}
+
 let raw = '';
 process.stdin.on('data', (chunk) => (raw += chunk));
 process.stdin.on('end', () => {
