@@ -9,7 +9,7 @@ const path = require('path');
 // live copy at ~/.claude/statusline.js and this repo copy must always be
 // kept in sync, `node statusline.js --version` lets you confirm which
 // version a given copy is running without reading its source.
-const SCRIPT_VERSION = '1.0.0';
+const SCRIPT_VERSION = '1.1.0';
 
 if (process.argv.includes('--version')) {
   process.stdout.write(`${SCRIPT_VERSION}\n`);
@@ -312,6 +312,13 @@ process.stdin.on('end', () => {
   // Code claims for itself regardless of what we report as the line length.
   const safetyMargin = 4;
 
+  // Below this width (e.g. a split/narrow pane), spread the line across two
+  // rows instead of shrinking everything to fit one — model/context/repo on
+  // row 1, velocity/rate-limits/clock/cost on row 2. Each row then gets the
+  // FULL terminal width to itself rather than splitting one shared budget.
+  const TWO_LINE_WIDTH_THRESHOLD = 120;
+  const twoLine = terminalWidth < TWO_LINE_WIDTH_THRESHOLD;
+
   // Truncates `text` to at most `available` visible characters, appending a
   // single-character ellipsis instead of the removed tail. Used for both the
   // branch name and the repo name, whichever needs to shrink to make the
@@ -328,20 +335,16 @@ process.stdin.on('end', () => {
   // untruncated branch and repo name, since those only shrink afterward if
   // shrinking the bar down to nothing still isn't enough.
   const MAX_BAR_BLOCKS = 20;
+  // In 2-line mode, velocity/rate-limits/clock/cost move to row 2, so they no
+  // longer compete with the bar/branch/repo for row 1's width budget.
+  const trailingLineOneParts = twoLine ? [] : [velocityPart, rateLimitsPart, clockPart, costPart];
   const contextPartZeroBar = usageTrio(usedPct, contextLabel, 0);
   const modelContextPartZeroBar = [modelPart, contextPartZeroBar].filter(Boolean).join(' ');
   const branchPlaceholderForBar = branch ? `${branchPrefix}${branch}${branchSuffix}` : '';
   const repoPartForBar = [styledRepoName(repoName), leafPart, branchPlaceholderForBar, dirtyPart]
     .filter(Boolean)
     .join(' ');
-  const otherPartsForBar = [
-    modelContextPartZeroBar,
-    repoPartForBar,
-    velocityPart,
-    rateLimitsPart,
-    clockPart,
-    costPart,
-  ].filter(Boolean);
+  const otherPartsForBar = [modelContextPartZeroBar, repoPartForBar, ...trailingLineOneParts].filter(Boolean);
   const lengthWithoutBar = stripAnsi(otherPartsForBar.join(SEP)).length;
   // Drawing 1+ blocks (vs. none) reintroduces an extra separating space
   // between the bar and the percentage, so N blocks cost N+1 chars relative
@@ -356,14 +359,7 @@ process.stdin.on('end', () => {
   const repoPartWithBranchPlaceholder = [styledRepoName(repoName), leafPart, branchPlaceholder, dirtyPart]
     .filter(Boolean)
     .join(' ');
-  const otherParts = [
-    modelContextPart,
-    repoPartWithBranchPlaceholder,
-    velocityPart,
-    rateLimitsPart,
-    clockPart,
-    costPart,
-  ].filter(Boolean);
+  const otherParts = [modelContextPart, repoPartWithBranchPlaceholder, ...trailingLineOneParts].filter(Boolean);
   const baseLineVisibleLength = stripAnsi(otherParts.join(SEP)).length;
 
   const truncatedBranch = branch
@@ -375,33 +371,35 @@ process.stdin.on('end', () => {
   // branch above is already final — so a short repo name only gets
   // truncated if shrinking the branch alone still wasn't enough.
   const repoPartPlaceholder = [styledRepoName(''), leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
-  const partsWithRepoPlaceholder = [
-    modelContextPart,
-    repoPartPlaceholder,
-    velocityPart,
-    rateLimitsPart,
-    clockPart,
-    costPart,
-  ].filter(Boolean);
+  const partsWithRepoPlaceholder = [modelContextPart, repoPartPlaceholder, ...trailingLineOneParts].filter(Boolean);
   const lengthWithoutRepoName = stripAnsi(partsWithRepoPlaceholder.join(SEP)).length;
   const truncatedRepoName = truncateToFit(repoName, terminalWidth - lengthWithoutRepoName - safetyMargin);
   const folderPart = styledRepoName(truncatedRepoName);
 
   const repoPart = [folderPart, leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
 
-  const parts = [modelContextPart, repoPart, velocityPart, rateLimitsPart, clockPart, costPart].filter(Boolean);
-
-  let finalLine = parts.join(SEP);
-
-  // Final safety net: even if the branch-name truncation above under-estimated
-  // (stale/unavailable terminal width, emoji-width quirks, etc.), make sure the
-  // rendered line can never overflow the terminal and get hard-cut mid-segment
-  // by it. This trims from the right (rather than the branch) as a last resort.
-  const finalVisibleLength = stripAnsi(finalLine).length;
-  const hardBudget = terminalWidth - safetyMargin;
-  if (hardBudget > 0 && finalVisibleLength > hardBudget) {
-    finalLine = truncateAnsiToWidth(finalLine, Math.max(0, hardBudget - 1)) + RESET + '…';
+  // Final safety net: even if the branch/repo-name truncation above
+  // under-estimated (stale/unavailable terminal width, emoji-width quirks,
+  // etc.), make sure a rendered row can never overflow the terminal and get
+  // hard-cut mid-segment by it. Trims from the right as a last resort.
+  function hardTruncateToTerminal(line) {
+    const visibleLength = stripAnsi(line).length;
+    const hardBudget = terminalWidth - safetyMargin;
+    if (hardBudget > 0 && visibleLength > hardBudget) {
+      return truncateAnsiToWidth(line, Math.max(0, hardBudget - 1)) + RESET + '…';
+    }
+    return line;
   }
 
-  process.stdout.write(finalLine + '\n');
+  const lineOneParts = [modelContextPart, repoPart, ...trailingLineOneParts].filter(Boolean);
+  let output = hardTruncateToTerminal(lineOneParts.join(SEP));
+
+  if (twoLine) {
+    const lineTwoParts = [velocityPart, rateLimitsPart, clockPart, costPart].filter(Boolean);
+    if (lineTwoParts.length > 0) {
+      output += '\n' + hardTruncateToTerminal(lineTwoParts.join(SEP));
+    }
+  }
+
+  process.stdout.write(output + '\n');
 });
