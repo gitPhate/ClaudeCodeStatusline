@@ -29,7 +29,7 @@ When the line is too long, three things shrink in order, each only kicking in on
 
 A final whole-line safety net hard-truncates the entire rendered line as a last resort, so it can never overflow and get cut off mid-segment by the terminal itself.
 
-Below 120 columns (e.g. a split/narrow pane), the line switches to a **2-row layout** instead of shrinking everything to fit one row: model, context bar, and repo/branch/dirty-status on row 1; lines changed, rate limits, session duration, and cost on row 2. Each row gets the full terminal width to itself, so the context bar and branch/repo name typically need less shrinking than they would squeezed onto a single wide line.
+Below 160 columns (e.g. a non-maximized window or a split pane), the line switches to a **2-row layout** instead of shrinking everything to fit one row: model, context bar, and repo/branch/dirty-status on row 1; lines changed, rate limits, session duration, and cost on row 2. Each row gets the full terminal width to itself, so the context bar and branch/repo name typically need less shrinking than they would squeezed onto a single wide line.
 
 ## Files
 

@@ -9,7 +9,7 @@ const path = require('path');
 // live copy at ~/.claude/statusline.js and this repo copy must always be
 // kept in sync, `node statusline.js --version` lets you confirm which
 // version a given copy is running without reading its source.
-const SCRIPT_VERSION = '1.1.0';
+const SCRIPT_VERSION = '1.1.2';
 
 if (process.argv.includes('--version')) {
   process.stdout.write(`${SCRIPT_VERSION}\n`);
@@ -316,7 +316,7 @@ process.stdin.on('end', () => {
   // rows instead of shrinking everything to fit one — model/context/repo on
   // row 1, velocity/rate-limits/clock/cost on row 2. Each row then gets the
   // FULL terminal width to itself rather than splitting one shared budget.
-  const TWO_LINE_WIDTH_THRESHOLD = 120;
+  const TWO_LINE_WIDTH_THRESHOLD = 160;
   const twoLine = terminalWidth < TWO_LINE_WIDTH_THRESHOLD;
 
   // Truncates `text` to at most `available` visible characters, appending a
