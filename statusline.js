@@ -9,7 +9,7 @@ const path = require('path');
 // live copy at ~/.claude/statusline.js and this repo copy must always be
 // kept in sync, `node statusline.js --version` lets you confirm which
 // version a given copy is running without reading its source.
-const SCRIPT_VERSION = '1.1.2';
+const SCRIPT_VERSION = '1.2.0';
 
 if (process.argv.includes('--version')) {
   process.stdout.write(`${SCRIPT_VERSION}\n`);
@@ -239,6 +239,10 @@ process.stdin.on('end', () => {
   const branchPrefix = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (` : '';
   const branchSuffix = branch ? `)${RESET}` : '';
 
+  const worktreeName = input?.worktree?.name || input?.workspace?.git_worktree || '';
+  const hasWorktree = Boolean(worktreeName);
+  const worktreePart = hasWorktree ? `${fg24(80, 220, 120)}🌳 ${worktreeName}${RESET}` : '';
+
   const contextLabel = maxContextTokens
     ? `🪟 ${formatTokenCount(totalInputTokens)}/${formatTokenCount(maxContextTokens)}`
     : `🪟 ${formatTokenCount(totalInputTokens)}`;
@@ -341,7 +345,7 @@ process.stdin.on('end', () => {
   const contextPartZeroBar = usageTrio(usedPct, contextLabel, 0);
   const modelContextPartZeroBar = [modelPart, contextPartZeroBar].filter(Boolean).join(' ');
   const branchPlaceholderForBar = branch ? `${branchPrefix}${branch}${branchSuffix}` : '';
-  const repoPartForBar = [styledRepoName(repoName), leafPart, branchPlaceholderForBar, dirtyPart]
+  const repoPartForBar = [styledRepoName(repoName), leafPart, branchPlaceholderForBar, worktreePart, dirtyPart]
     .filter(Boolean)
     .join(' ');
   const otherPartsForBar = [modelContextPartZeroBar, repoPartForBar, ...trailingLineOneParts].filter(Boolean);
@@ -350,13 +354,21 @@ process.stdin.on('end', () => {
   // between the bar and the percentage, so N blocks cost N+1 chars relative
   // to the zero-bar baseline, not N.
   const barBudget = terminalWidth - safetyMargin - lengthWithoutBar - 1;
-  const barBlocks = Math.max(0, Math.min(MAX_BAR_BLOCKS, barBudget));
+  // A worktree indicator takes priority over the context bar's blocks: when
+  // shown, the bar collapses to just its percentage so the line has room.
+  const barBlocks = hasWorktree ? 0 : Math.max(0, Math.min(MAX_BAR_BLOCKS, barBudget));
   const contextPart = usageTrio(usedPct, contextLabel, barBlocks);
   const modelContextPart = [modelPart, contextPart].filter(Boolean).join(' ');
 
   // Branch shrinks first, sized against the full (untruncated) repo name.
   const branchPlaceholder = branch ? `${branchPrefix}${branchSuffix}` : '';
-  const repoPartWithBranchPlaceholder = [styledRepoName(repoName), leafPart, branchPlaceholder, dirtyPart]
+  const repoPartWithBranchPlaceholder = [
+    styledRepoName(repoName),
+    leafPart,
+    branchPlaceholder,
+    worktreePart,
+    dirtyPart,
+  ]
     .filter(Boolean)
     .join(' ');
   const otherParts = [modelContextPart, repoPartWithBranchPlaceholder, ...trailingLineOneParts].filter(Boolean);
@@ -370,13 +382,15 @@ process.stdin.on('end', () => {
   // Repo name shrinks second, against the actual remaining budget once the
   // branch above is already final — so a short repo name only gets
   // truncated if shrinking the branch alone still wasn't enough.
-  const repoPartPlaceholder = [styledRepoName(''), leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
+  const repoPartPlaceholder = [styledRepoName(''), leafPart, branchPart, worktreePart, dirtyPart]
+    .filter(Boolean)
+    .join(' ');
   const partsWithRepoPlaceholder = [modelContextPart, repoPartPlaceholder, ...trailingLineOneParts].filter(Boolean);
   const lengthWithoutRepoName = stripAnsi(partsWithRepoPlaceholder.join(SEP)).length;
   const truncatedRepoName = truncateToFit(repoName, terminalWidth - lengthWithoutRepoName - safetyMargin);
   const folderPart = styledRepoName(truncatedRepoName);
 
-  const repoPart = [folderPart, leafPart, branchPart, dirtyPart].filter(Boolean).join(' ');
+  const repoPart = [folderPart, leafPart, branchPart, worktreePart, dirtyPart].filter(Boolean).join(' ');
 
   // Final safety net: even if the branch/repo-name truncation above
   // under-estimated (stale/unavailable terminal width, emoji-width quirks,

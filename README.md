@@ -11,6 +11,7 @@ Reading left to right:
 - 🤖 **Model** — display name, plus the reasoning effort level in parentheses when set (e.g. `Sonnet 5 (high)`)
 - 🪟 **Context usage** — a gradient bar (green → yellow → red, up to 20 blocks) with tokens used vs. max context window
 - **Repo & branch** — repo name, current directory leaf (if different from the repo root), and the git branch, prefixed with 🌿
+- 🌳 **Worktree** — when the session is running inside a git worktree, its name is shown next to the branch
 - **Dirty status** — counts of modified (`~`), untracked (`?`), added (`+`), and deleted (`-`) files
 - **Lines changed** — `+added`/`-removed` line counts for the session
 - **Rate limits** — 5-hour and 7-day usage percentages with an emoji threshold indicator (🟢/⚡️/🔥/🚨) and a reset countdown
@@ -23,7 +24,7 @@ The context bar, branch name, and repo name all shrink dynamically so the whole 
 
 When the line is too long, three things shrink in order, each only kicking in once the previous one can't free up enough room on its own:
 
-1. **The context bar shrinks first**, by drawing fewer of its (up to 20) blocks — fully redrawn at every size, not just cut off, so the fill proportion and gradient colors are always correct — down to 0 blocks (just the label, emoji, and percentage) if needed.
+1. **The context bar shrinks first**, by drawing fewer of its (up to 20) blocks — fully redrawn at every size, not just cut off, so the fill proportion and gradient colors are always correct — down to 0 blocks (just the label, emoji, and percentage) if needed. It also collapses straight to 0 blocks whenever a worktree indicator is shown, to make room for it.
 2. **The branch name shrinks second** (with a `…`), sized against the full, untruncated repo name.
 3. **The repo name shrinks third** (with a `…`), against whatever budget is left once the branch is already final.
 
