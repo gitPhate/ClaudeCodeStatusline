@@ -18,7 +18,7 @@ Reading left to right:
 - ⏱️ **Session duration** — cumulative wall-clock time for the current Claude Code session. Shown as `Xm Ys`, or `Xh Ym` once it passes 60 minutes.
 - 💵 **Session cost** in USD
 
-Colors and emoji thresholds scale automatically: usage under 20% is green, 20–70% is yellow/⚡️, 70–90% is orange/🔥, and 90%+ is red/🚨.
+Colors and emoji thresholds scale automatically: usage under 20% is green/🟢, 20–70% is yellow/⚡️, 70–90% is orange/🔥, and 90%+ is red/🚨.
 
 The context bar, branch name, and repo name all shrink dynamically so the whole line always fits within the terminal width. Terminal width is detected from the `COLUMNS` environment variable Claude Code provides (since the script's stdout isn't a TTY, `process.stdout.columns` isn't available), falling back to parsing `mode con` on Windows when `COLUMNS` is unset, and finally a hardcoded 120 if neither is available. A fixed margin also accounts for the few columns of chrome Claude Code itself reserves around the rendered statusline row.
 
