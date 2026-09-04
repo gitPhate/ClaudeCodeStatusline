@@ -1,0 +1,18 @@
+# Codex CLI statusline preset
+#
+# Merge this [tui] block into %USERPROFILE%\.codex\config.toml (Windows),
+# or ~/.codex/config.toml on macOS/Linux. Codex renders these native items;
+# it does not invoke a custom stdin/stdout statusline command like Claude Code.
+
+[tui]
+status_line = [
+  "model-with-reasoning",
+  "current-dir",
+  "git-branch",
+  "context-used",
+  "used-tokens",
+  "five-hour-limit",
+  "weekly-limit",
+  "estimated-thread-cost"
+]
+status_line_use_colors = true

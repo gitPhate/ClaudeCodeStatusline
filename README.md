@@ -2,6 +2,8 @@
 
 A custom status line for [Claude Code](https://docs.claude.com/en/docs/claude-code) that replaces the default line with a single, information-dense bar covering your repo, git state, context usage, rate limits, session cost, and more — all in 24-bit truecolor.
 
+This repository also includes a native [Codex CLI](https://developers.openai.com/codex/cli/) preset. Codex currently configures its footer with an ordered list of built-in status items, so the Codex version is a configuration preset rather than a port of the Claude stdin-driven script.
+
 ![statusline screenshot](./screenshot.png)
 
 ## What it shows
@@ -32,47 +34,26 @@ A final whole-line safety net hard-truncates the entire rendered line as a last 
 
 Below 160 columns (e.g. a non-maximized window or a split pane), the line switches to a **2-row layout** instead of shrinking everything to fit one row: model, context bar, and repo/branch/dirty-status on row 1; lines changed, rate limits, session duration, and cost on row 2. Each row gets the full terminal width to itself, so the context bar and branch/repo name typically need less shrinking than they would squeezed onto a single wide line.
 
+## Install
+
+For Claude Code, clone this repo and run `/statusline` inside Claude Code, pointing it at `statusline.js` from your local clone.
+
+### Codex CLI
+
+Copy the `[tui]` block from [`codex-statusline.toml`](./codex-statusline.toml) into your Codex config file:
+
+```text
+%USERPROFILE%\.codex\config.toml   # Windows
+~/.codex/config.toml                # macOS/Linux
+```
+
+The preset shows model/reasoning, project name, current directory, git branch, context used, token count, and the 5-hour/weekly rate limits.
+
+You can also run `/statusline` in the Codex TUI to adjust the order interactively.
+
 ## Files
 
 - **`statusline.js`** — the primary, actively maintained implementation (Node.js, no dependencies beyond built-ins). Includes rate limits, effort level, session duration, cost, and dynamic context-bar/branch/repo-name shrinking to fit the terminal width.
 - **`statusline.sh`** ⚠️ **obsolete** — an earlier, simpler bash/jq/awk implementation covering only the core repo/branch/context/cost/velocity/model segments. Superseded by `statusline.js`, which has since gained rate limits, effort level, session duration, dirty-status breakdown, and dynamic branch truncation that were never ported back to the bash version. Kept around for reference only; not recommended for new setups.
-
-## Requirements
-
-- **statusline.js**: Node.js (uses only `child_process` and `path` from the standard library)
-- **statusline.sh** (obsolete, reference only): `bash`, `git`, `jq`, `awk`
-- A terminal that supports 24-bit truecolor ANSI escapes and emoji rendering
-
-## Setup
-
-Claude Code reads status line configuration from your settings file (e.g. `~/.claude/settings.json` or a project's `.claude/settings.json`), and invokes the configured command with the session state as JSON on stdin.
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "node /path/to/statusline.js"
-  }
-}
-```
-
-Or, for the obsolete bash version (not recommended, reference only):
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "bash /path/to/statusline.sh"
-  }
-}
-```
-
-Restart Claude Code (or start a new session) for the change to take effect.
-
-## How it works
-
-Each script reads a single JSON blob from stdin — the shape Claude Code provides via its status line hook, including `model`, `workspace`, `context_window`, `cost`, `rate_limits`, and `effort` — and prints one ANSI-colored line to stdout. Git state (branch, dirty file counts) is shelled out to `git` against the session's working directory.
-
----
 
 **AI Disclaimer:** _This repo is 100% written and maintained by Claude Code — every commit, feature, and this README included._
