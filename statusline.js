@@ -34,12 +34,12 @@ process.stdin.on("data", (chunk) => raw += chunk), process.stdin.on("end", () =>
   const model = input?.model?.display_name || "unknown", cwd = input?.workspace?.current_dir || input?.cwd || ".", repoNameFromInput = input?.workspace?.repo?.name, usedPct = Number(input?.context_window?.used_percentage ?? 0) || 0, totalInputTokens = Number(input?.context_window?.total_input_tokens ?? 0) || 0, maxContextTokens = Number(input?.context_window?.max_tokens ?? input?.context_window?.context_window_size ?? 0) || (usedPct > 0 ? Math.round(totalInputTokens / (usedPct / 100)) : 0), linesAdded = Number(input?.cost?.total_lines_added ?? 0) || 0, linesRemoved = Number(input?.cost?.total_lines_removed ?? 0) || 0, rateLimitPct = input?.rate_limits?.five_hour?.used_percentage, weekLimitPct = input?.rate_limits?.seven_day?.used_percentage, rateLimitResetsAt = input?.rate_limits?.five_hour?.resets_at, weekLimitResetsAt = input?.rate_limits?.seven_day?.resets_at, effortLevel = input?.effort?.level || "", durationMs = Number(input?.cost?.total_duration_ms ?? 0) || 0, totalCostUsd = Number(input?.cost?.total_cost_usd ?? 0) || 0, repoName = repoNameFromInput || path.basename(cwd);
   let branch = "", modified = 0, untracked = 0, added = 0, deleted = 0;
   try {
-    (0, import_child_process.execSync)("git rev-parse --is-inside-work-tree", { cwd, stdio: "ignore" }), branch = (0, import_child_process.execSync)("git rev-parse --abbrev-ref HEAD", { cwd, stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
-    const statusLines = (0, import_child_process.execSync)("git status --porcelain --untracked-files=all", {
+    const statusLines = (0, import_child_process.execSync)("git status --porcelain --branch --untracked-files=all", {
       cwd,
       stdio: ["ignore", "pipe", "ignore"]
     }).toString().split(`
-`).filter(Boolean);
+`).filter(Boolean), header = (statusLines.shift() ?? "").slice(3);
+    header.startsWith("HEAD (no branch)") ? branch = "HEAD" : !header.startsWith("No commits yet on ") && !header.startsWith("Initial commit on ") && (branch = header.split("...")[0].split(" [")[0]);
     for (const line of statusLines) {
       const x = line[0], y = line[1];
       x === "?" && y === "?" ? untracked++ : x === "D" || y === "D" ? deleted++ : x === "A" || y === "A" ? added++ : ("MRC".includes(x) || "MRC".includes(y)) && modified++;

@@ -73,17 +73,20 @@ process.stdin.on('end', () => {
   let added = 0;
   let deleted = 0;
   try {
-    execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' });
-    branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
-      .toString()
-      .trim();
-    const statusLines = execSync('git status --porcelain --untracked-files=all', {
+    const statusLines = execSync('git status --porcelain --branch --untracked-files=all', {
       cwd,
       stdio: ['ignore', 'pipe', 'ignore'],
     })
       .toString()
       .split('\n')
       .filter(Boolean);
+    // First line is the branch header: "## main...origin/main [ahead 1]",
+    // "## HEAD (no branch)" (detached) or "## No commits yet on main".
+    const header = (statusLines.shift() ?? '').slice(3);
+    if (header.startsWith('HEAD (no branch)')) branch = 'HEAD';
+    else if (!header.startsWith('No commits yet on ') && !header.startsWith('Initial commit on ')) {
+      branch = header.split('...')[0].split(' [')[0];
+    }
     for (const line of statusLines) {
       const x = line[0];
       const y = line[1];
