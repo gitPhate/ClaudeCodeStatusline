@@ -66,7 +66,7 @@ process.stdin.on("data", (chunk) => raw += chunk), process.stdin.on("end", () =>
   function usageTrio(rawPct, label, totalBlocks = 20) {
     const pct = Math.max(0, Math.min(100, rawPct)), pctInt = Math.round(pct), filled = totalBlocks > 0 ? Math.max(0, Math.min(totalBlocks, Math.round(pct / 100 * totalBlocks))) : 0, empty = totalBlocks - filled;
     let emoji, lr, lg, lb;
-    pctInt < 20 ? (emoji = "\u{1F7E2}", [lr, lg, lb] = [0, 200, 80]) : pctInt < 70 ? (emoji = "\u26A1\uFE0F", [lr, lg, lb] = [230, 180, 20]) : pctInt < 90 ? (emoji = "\u{1F525}", [lr, lg, lb] = [230, 100, 20]) : (emoji = "\u{1F6A8}", [lr, lg, lb] = [220, 40, 20]);
+    pctInt < 20 ? (emoji = "\u{1F7E2}", [lr, lg, lb] = [0, 200, 80]) : pctInt < 50 ? (emoji = "\u{1F6A7}", [lr, lg, lb] = [230, 180, 20]) : pctInt < 70 ? (emoji = "\u{1F514}", [lr, lg, lb] = [230, 140, 20]) : pctInt < 90 ? (emoji = "\u{1F525}", [lr, lg, lb] = [230, 100, 20]) : (emoji = "\u{1F6A8}", [lr, lg, lb] = [220, 40, 20]);
     let filledBar = "";
     for (let i = 0; i < filled; i++) {
       const [r, g, b] = gradientBlockColor(i, totalBlocks);
@@ -85,7 +85,7 @@ process.stdin.on("data", (chunk) => raw += chunk), process.stdin.on("end", () =>
   function usagePct(rawPct, label) {
     const pct = Math.max(0, Math.min(100, rawPct)), pctInt = Math.round(pct);
     let emoji, lr, lg, lb;
-    return pctInt < 20 ? (emoji = "\u{1F7E2}", [lr, lg, lb] = [0, 200, 80]) : pctInt < 70 ? (emoji = "\u26A1\uFE0F", [lr, lg, lb] = [230, 180, 20]) : pctInt < 90 ? (emoji = "\u{1F525}", [lr, lg, lb] = [230, 100, 20]) : (emoji = "\u{1F6A8}", [lr, lg, lb] = [220, 40, 20]), `${label ? `${fg24(150, 150, 150)}${label} ${RESET}` : ""}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
+    return pctInt < 20 ? (emoji = "\u{1F7E2}", [lr, lg, lb] = [0, 200, 80]) : pctInt < 50 ? (emoji = "\u{1F6A7}", [lr, lg, lb] = [230, 180, 20]) : pctInt < 70 ? (emoji = "\u{1F514}", [lr, lg, lb] = [230, 140, 20]) : pctInt < 90 ? (emoji = "\u{1F525}", [lr, lg, lb] = [230, 100, 20]) : (emoji = "\u{1F6A8}", [lr, lg, lb] = [220, 40, 20]), `${label ? `${fg24(150, 150, 150)}${label} ${RESET}` : ""}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
   function formatTokenCount(n) {
     return n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}k` : String(n);

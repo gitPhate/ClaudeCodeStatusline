@@ -142,9 +142,12 @@ process.stdin.on('end', () => {
     if (pctInt < 20) {
       emoji = '🟢';
       [lr, lg, lb] = [0, 200, 80];
-    } else if (pctInt < 70) {
-      emoji = '⚡️';
+    } else if (pctInt < 50) {
+      emoji = '🚧';
       [lr, lg, lb] = [230, 180, 20];
+    } else if (pctInt < 70) {
+      emoji = '🔔';
+      [lr, lg, lb] = [230, 140, 20];
     } else if (pctInt < 90) {
       emoji = '🔥';
       [lr, lg, lb] = [230, 100, 20];
@@ -188,9 +191,12 @@ process.stdin.on('end', () => {
     if (pctInt < 20) {
       emoji = '🟢';
       [lr, lg, lb] = [0, 200, 80];
-    } else if (pctInt < 70) {
-      emoji = '⚡️';
+    } else if (pctInt < 50) {
+      emoji = '🚧';
       [lr, lg, lb] = [230, 180, 20];
+    } else if (pctInt < 70) {
+      emoji = '🔔';
+      [lr, lg, lb] = [230, 140, 20];
     } else if (pctInt < 90) {
       emoji = '🔥';
       [lr, lg, lb] = [230, 100, 20];

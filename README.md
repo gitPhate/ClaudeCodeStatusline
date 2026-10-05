@@ -16,11 +16,19 @@ Reading left to right:
 - 🌳 **Worktree** — when the session is running inside a git worktree, its name is shown next to the branch
 - **Dirty status** — counts of modified (`~`), untracked (`?`), added (`+`), and deleted (`-`) files
 - **Lines changed** — `+added`/`-removed` line counts for the session
-- **Rate limits** — 5-hour and 7-day usage percentages with an emoji threshold indicator (🟢/⚡️/🔥/🚨) and a reset countdown
+- **Rate limits** — 5-hour and 7-day usage percentages with an emoji threshold indicator (🟢/🚧/🔔/🔥/🚨) and a reset countdown
 - ⏱️ **Session duration** — cumulative wall-clock time for the current Claude Code session. Shown as `Xm Ys`, or `Xh Ym` once it passes 60 minutes.
 - 💵 **Session cost** in USD
 
-Colors and emoji thresholds scale automatically: usage under 20% is green/🟢, 20–70% is yellow/⚡️, 70–90% is orange/🔥, and 90%+ is red/🚨.
+Colors and emoji thresholds scale automatically with usage:
+
+| Usage | Indicator | Color |
+|---|---|---|
+| under 20% | 🟢 | $\color{#00C850}{\textsf{green}}$ |
+| 20–50% | 🚧 | $\color{#E6B414}{\textsf{yellow}}$ |
+| 50–70% | 🔔 | $\color{#E68C14}{\textsf{amber}}$ |
+| 70–90% | 🔥 | $\color{#E66414}{\textsf{orange}}$ |
+| 90%+ | 🚨 | $\color{#DC2814}{\textsf{red}}$ |
 
 The context bar, branch name, and repo name all shrink dynamically so the whole line always fits within the terminal width. Terminal width is detected from the `COLUMNS` environment variable Claude Code provides (since the script's stdout isn't a TTY, `process.stdout.columns` isn't available), falling back to parsing `mode con` on Windows when `COLUMNS` is unset, and finally a hardcoded 120 if neither is available. A fixed margin also accounts for the few columns of chrome Claude Code itself reserves around the rendered statusline row.
 
