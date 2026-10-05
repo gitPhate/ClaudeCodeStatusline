@@ -1,5 +1,7 @@
 # Claude Code Statusline
 
+**Source is `statusline.ts`.** Edit it, then run `npm run build` (typechecks with tsc, bundles with esbuild into the committed `statusline.js`). The command stays `node statusline.js` — no TS at runtime. Below, "`statusline.js`" means the compiled output; bump `SCRIPT_VERSION` in the `.ts`.
+
 This repo (`C:\Development\ai\ClaudeCodeStatusline\statusline.js`) is the source of truth, but Claude Code actually runs its live copy from `C:\Users\gabriele.ricci\.claude\statusline.js`.
 
 **Any non-temporary edit to `statusline.js` must be applied to both copies** — the repo file and the running copy at `C:\Users\gabriele.ricci\.claude\statusline.js` — so they never drift out of sync. Temporary/experimental edits used only to test something in the moment don't need to be mirrored.

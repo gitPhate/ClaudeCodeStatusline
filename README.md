@@ -53,7 +53,8 @@ You can also run `/statusline` in the Codex TUI to adjust the order interactivel
 
 ## Files
 
-- **`statusline.js`** — the primary, actively maintained implementation (Node.js, no dependencies beyond built-ins). Includes rate limits, effort level, session duration, cost, and dynamic context-bar/branch/repo-name shrinking to fit the terminal width.
+- **`statusline.ts`** — TypeScript source; `npm install && npm run build` compiles it to `statusline.js` (committed, so the command stays `node statusline.js` with no runtime TS overhead).
+- **`statusline.js`** — compiled output of the above; the primary, actively maintained implementation (Node.js, no dependencies beyond built-ins). Includes rate limits, effort level, session duration, cost, and dynamic context-bar/branch/repo-name shrinking to fit the terminal width.
 - **`statusline.sh`** ⚠️ **obsolete** — an earlier, simpler bash/jq/awk implementation covering only the core repo/branch/context/cost/velocity/model segments. Superseded by `statusline.js`, which has since gained rate limits, effort level, session duration, dirty-status breakdown, and dynamic branch truncation that were never ported back to the bash version. Kept around for reference only; not recommended for new setups.
 
 **AI Disclaimer:** _This repo is 100% written and maintained by Claude Code — every commit, feature, and this README included._

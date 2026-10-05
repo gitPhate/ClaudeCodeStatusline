@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-statusline",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && esbuild statusline.ts --outfile=statusline.js --platform=node --target=node18 --format=cjs --minify-syntax"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.6.0"
+  }
+}

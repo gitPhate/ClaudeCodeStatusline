@@ -1,419 +1,167 @@
 #!/usr/bin/env node
-// Claude Code status line: repo | branch | context bar | usage | cost | velocity | model
-// All colors are 24-bit truecolor ANSI escapes.
-
-const { execSync } = require('child_process');
-const path = require('path');
-
-// Bump on every non-temporary change (semver: major.minor.patch). Since the
-// live copy at ~/.claude/statusline.js and this repo copy must always be
-// kept in sync, `node statusline.js --version` lets you confirm which
-// version a given copy is running without reading its source.
-const SCRIPT_VERSION = '1.2.0';
-
-if (process.argv.includes('--version')) {
-  process.stdout.write(`${SCRIPT_VERSION}\n`);
-  process.exit(0);
-}
-
-let raw = '';
-process.stdin.on('data', (chunk) => (raw += chunk));
-process.stdin.on('end', () => {
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf, __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from == "object" || typeof from == "function")
+    for (let key of __getOwnPropNames(from))
+      !__hasOwnProp.call(to, key) && key !== except && __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: !0 }) : target,
+  mod
+));
+var import_child_process = require("child_process"), path = __toESM(require("path"));
+const SCRIPT_VERSION = "1.2.1";
+process.argv.includes("--version") && (process.stdout.write(`${SCRIPT_VERSION}
+`), process.exit(0));
+let raw = "";
+process.stdin.on("data", (chunk) => raw += chunk), process.stdin.on("end", () => {
   let input = {};
   try {
     input = JSON.parse(raw);
   } catch {
     input = {};
   }
-
-  const model = input?.model?.display_name || 'unknown';
-  const cwd = input?.workspace?.current_dir || input?.cwd || '.';
-  const repoNameFromInput = input?.workspace?.repo?.name;
-  const usedPct = Number(input?.context_window?.used_percentage ?? 0) || 0;
-  const totalInputTokens = Number(input?.context_window?.total_input_tokens ?? 0) || 0;
-  const maxContextTokens =
-    Number(input?.context_window?.max_tokens ?? input?.context_window?.context_window_size ?? 0) ||
-    (usedPct > 0 ? Math.round(totalInputTokens / (usedPct / 100)) : 0);
-  const linesAdded = Number(input?.cost?.total_lines_added ?? 0) || 0;
-  const linesRemoved = Number(input?.cost?.total_lines_removed ?? 0) || 0;
-  const rateLimitPct = input?.rate_limits?.five_hour?.used_percentage;
-  const weekLimitPct = input?.rate_limits?.seven_day?.used_percentage;
-  const rateLimitResetsAt = input?.rate_limits?.five_hour?.resets_at;
-  const weekLimitResetsAt = input?.rate_limits?.seven_day?.resets_at;
-  const effortLevel = input?.effort?.level || '';
-  const durationMs = Number(input?.cost?.total_duration_ms ?? 0) || 0;
-  const totalCostUsd = Number(input?.cost?.total_cost_usd ?? 0) || 0;
-
-  const repoName = repoNameFromInput || path.basename(cwd);
-
-  let branch = '';
-  let modified = 0;
-  let untracked = 0;
-  let added = 0;
-  let deleted = 0;
+  const model = input?.model?.display_name || "unknown", cwd = input?.workspace?.current_dir || input?.cwd || ".", repoNameFromInput = input?.workspace?.repo?.name, usedPct = Number(input?.context_window?.used_percentage ?? 0) || 0, totalInputTokens = Number(input?.context_window?.total_input_tokens ?? 0) || 0, maxContextTokens = Number(input?.context_window?.max_tokens ?? input?.context_window?.context_window_size ?? 0) || (usedPct > 0 ? Math.round(totalInputTokens / (usedPct / 100)) : 0), linesAdded = Number(input?.cost?.total_lines_added ?? 0) || 0, linesRemoved = Number(input?.cost?.total_lines_removed ?? 0) || 0, rateLimitPct = input?.rate_limits?.five_hour?.used_percentage, weekLimitPct = input?.rate_limits?.seven_day?.used_percentage, rateLimitResetsAt = input?.rate_limits?.five_hour?.resets_at, weekLimitResetsAt = input?.rate_limits?.seven_day?.resets_at, effortLevel = input?.effort?.level || "", durationMs = Number(input?.cost?.total_duration_ms ?? 0) || 0, totalCostUsd = Number(input?.cost?.total_cost_usd ?? 0) || 0, repoName = repoNameFromInput || path.basename(cwd);
+  let branch = "", modified = 0, untracked = 0, added = 0, deleted = 0;
   try {
-    execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' });
-    branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
-      .toString()
-      .trim();
-    const statusLines = execSync('git status --porcelain --untracked-files=all', {
+    (0, import_child_process.execSync)("git rev-parse --is-inside-work-tree", { cwd, stdio: "ignore" }), branch = (0, import_child_process.execSync)("git rev-parse --abbrev-ref HEAD", { cwd, stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+    const statusLines = (0, import_child_process.execSync)("git status --porcelain --untracked-files=all", {
       cwd,
-      stdio: ['ignore', 'pipe', 'ignore'],
-    })
-      .toString()
-      .split('\n')
-      .filter(Boolean);
+      stdio: ["ignore", "pipe", "ignore"]
+    }).toString().split(`
+`).filter(Boolean);
     for (const line of statusLines) {
-      const x = line[0];
-      const y = line[1];
-      if (x === '?' && y === '?') untracked++;
-      else if (x === 'D' || y === 'D') deleted++;
-      else if (x === 'A' || y === 'A') added++;
-      else if ('MRC'.includes(x) || 'MRC'.includes(y)) modified++;
+      const x = line[0], y = line[1];
+      x === "?" && y === "?" ? untracked++ : x === "D" || y === "D" ? deleted++ : x === "A" || y === "A" ? added++ : ("MRC".includes(x) || "MRC".includes(y)) && modified++;
     }
   } catch {
-    branch = '';
+    branch = "";
   }
-
-  const RESET = '\x1b[0m';
-  const fg24 = (r, g, b) => `\x1b[38;2;${r};${g};${b}m`;
-  const SEP = `${fg24(100, 100, 100)} | ${RESET}`;
-
+  const RESET = "\x1B[0m", fg24 = (r, g, b) => `\x1B[38;2;${r};${g};${b}m`, SEP = `${fg24(100, 100, 100)} | ${RESET}`;
   function lerp(a, b, t) {
     return Math.round(a + (b - a) * t);
   }
-
-  // Color for the block at position `idx` out of `total`, along a fixed
-  // green -> yellow -> red gradient spanning the whole bar (position-based,
-  // not value-based), same idea as the AKCodez gradient progress bar gist.
   function gradientBlockColor(idx, total) {
     const t = total > 1 ? idx / (total - 1) : 0;
     let r, g, b;
     if (t <= 0.5) {
       const tt = t / 0.5;
-      r = lerp(0, 220, tt);
-      g = lerp(200, 200, tt);
-      b = lerp(80, 0, tt);
+      r = lerp(0, 220, tt), g = lerp(200, 200, tt), b = lerp(80, 0, tt);
     } else {
       const tt = (t - 0.5) / 0.5;
-      r = lerp(220, 220, tt);
-      g = lerp(200, 40, tt);
-      b = lerp(0, 20, tt);
+      r = lerp(220, 220, tt), g = lerp(200, 40, tt), b = lerp(0, 20, tt);
     }
     return [r, g, b];
   }
-
-  // `totalBlocks` controls how many of the (up to 20) gradient blocks are
-  // drawn — the bar shrinks by lowering this, while filled/empty and the
-  // gradient colors are recomputed from scratch so the redraw always looks
-  // right at any size, down to 0 (no bar, just the label/emoji/percentage).
   function usageTrio(rawPct, label, totalBlocks = 20) {
-    const pct = Math.max(0, Math.min(100, rawPct));
-    const pctInt = Math.round(pct);
-
-    const filled = totalBlocks > 0 ? Math.max(0, Math.min(totalBlocks, Math.round((pct / 100) * totalBlocks))) : 0;
-    const empty = totalBlocks - filled;
-
+    const pct = Math.max(0, Math.min(100, rawPct)), pctInt = Math.round(pct), filled = totalBlocks > 0 ? Math.max(0, Math.min(totalBlocks, Math.round(pct / 100 * totalBlocks))) : 0, empty = totalBlocks - filled;
     let emoji, lr, lg, lb;
-    if (pctInt < 20) {
-      emoji = '🟢';
-      [lr, lg, lb] = [0, 200, 80];
-    } else if (pctInt < 70) {
-      emoji = '⚡️';
-      [lr, lg, lb] = [230, 180, 20];
-    } else if (pctInt < 90) {
-      emoji = '🔥';
-      [lr, lg, lb] = [230, 100, 20];
-    } else {
-      emoji = '🚨';
-      [lr, lg, lb] = [220, 40, 20];
-    }
-
-    let filledBar = '';
+    pctInt < 20 ? (emoji = "\u{1F7E2}", [lr, lg, lb] = [0, 200, 80]) : pctInt < 70 ? (emoji = "\u26A1\uFE0F", [lr, lg, lb] = [230, 180, 20]) : pctInt < 90 ? (emoji = "\u{1F525}", [lr, lg, lb] = [230, 100, 20]) : (emoji = "\u{1F6A8}", [lr, lg, lb] = [220, 40, 20]);
+    let filledBar = "";
     for (let i = 0; i < filled; i++) {
       const [r, g, b] = gradientBlockColor(i, totalBlocks);
-      filledBar += `${fg24(r, g, b)}█`;
+      filledBar += `${fg24(r, g, b)}\u2588`;
     }
-    const emptyBar = empty > 0 ? `${fg24(60, 60, 60)}${'█'.repeat(empty)}` : '';
-    const bar = `${filledBar}${emptyBar}${RESET}`;
-
-    const labelPart = label ? `${fg24(150, 150, 150)}${label} ${RESET}` : '';
-    return totalBlocks > 0
-      ? `${labelPart}${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`
-      : `${labelPart}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
+    const emptyBar = empty > 0 ? `${fg24(60, 60, 60)}${"\u2588".repeat(empty)}` : "", bar = `${filledBar}${emptyBar}${RESET}`, labelPart = label ? `${fg24(150, 150, 150)}${label} ${RESET}` : "";
+    return totalBlocks > 0 ? `${labelPart}${emoji} ${bar} ${fg24(lr, lg, lb)}${pctInt}%${RESET}` : `${labelPart}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
-
   function formatResetIn(resetsAtSec) {
-    if (resetsAtSec == null) return '';
-    const diffMs = resetsAtSec * 1000 - Date.now();
-    if (diffMs <= 0) return '0m';
-    const totalMin = Math.round(diffMs / 60000);
-    const days = Math.floor(totalMin / (60 * 24));
-    const hours = Math.floor((totalMin % (60 * 24)) / 60);
-    const mins = totalMin % 60;
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${mins}m`;
-    return `${mins}m`;
+    if (resetsAtSec == null) return "";
+    const diffMs = resetsAtSec * 1e3 - Date.now();
+    if (diffMs <= 0) return "0m";
+    const totalMin = Math.round(diffMs / 6e4), days = Math.floor(totalMin / 1440), hours = Math.floor(totalMin % 1440 / 60), mins = totalMin % 60;
+    return days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   }
-
   function usagePct(rawPct, label) {
-    const pct = Math.max(0, Math.min(100, rawPct));
-    const pctInt = Math.round(pct);
-
+    const pct = Math.max(0, Math.min(100, rawPct)), pctInt = Math.round(pct);
     let emoji, lr, lg, lb;
-    if (pctInt < 20) {
-      emoji = '🟢';
-      [lr, lg, lb] = [0, 200, 80];
-    } else if (pctInt < 70) {
-      emoji = '⚡️';
-      [lr, lg, lb] = [230, 180, 20];
-    } else if (pctInt < 90) {
-      emoji = '🔥';
-      [lr, lg, lb] = [230, 100, 20];
-    } else {
-      emoji = '🚨';
-      [lr, lg, lb] = [220, 40, 20];
-    }
-
-    const labelPart = label ? `${fg24(150, 150, 150)}${label} ${RESET}` : '';
-    return `${labelPart}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
+    return pctInt < 20 ? (emoji = "\u{1F7E2}", [lr, lg, lb] = [0, 200, 80]) : pctInt < 70 ? (emoji = "\u26A1\uFE0F", [lr, lg, lb] = [230, 180, 20]) : pctInt < 90 ? (emoji = "\u{1F525}", [lr, lg, lb] = [230, 100, 20]) : (emoji = "\u{1F6A8}", [lr, lg, lb] = [220, 40, 20]), `${label ? `${fg24(150, 150, 150)}${label} ${RESET}` : ""}${emoji} ${fg24(lr, lg, lb)}${pctInt}%${RESET}`;
   }
-
   function formatTokenCount(n) {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-    return String(n);
+    return n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}k` : String(n);
   }
-
   function stripAnsi(str) {
-    return str.replace(/\x1b\[[0-9;]*m/g, '');
+    return str.replace(/\x1b\[[0-9;]*m/g, "");
   }
-
-  // Truncates an ANSI-colored string to at most `maxWidth` visible columns,
-  // preserving escape sequences (which contribute 0 width) intact. Used as a
-  // last-resort safety net so the whole line can never overflow the terminal,
-  // regardless of which segment's width estimate was wrong.
   function truncateAnsiToWidth(str, maxWidth) {
-    if (maxWidth <= 0) return '';
-    let visible = 0;
-    let out = '';
-    let i = 0;
+    if (maxWidth <= 0) return "";
+    let visible = 0, out = "", i = 0;
     const ansiRe = /\x1b\[[0-9;]*m/y;
-    while (i < str.length) {
+    for (; i < str.length; ) {
       ansiRe.lastIndex = i;
       const m = ansiRe.exec(str);
       if (m) {
-        out += m[0];
-        i += m[0].length;
+        out += m[0], i += m[0].length;
         continue;
       }
-      const code = str.charCodeAt(i);
-      const isHighSurrogate = code >= 0xd800 && code <= 0xdbff && i + 1 < str.length;
-      const chunk = isHighSurrogate ? str.slice(i, i + 2) : str[i];
+      const code = str.charCodeAt(i), chunk = code >= 55296 && code <= 56319 && i + 1 < str.length ? str.slice(i, i + 2) : str[i];
       if (visible + chunk.length > maxWidth) break;
-      out += chunk;
-      visible += chunk.length;
-      i += chunk.length;
+      out += chunk, visible += chunk.length, i += chunk.length;
     }
     return out;
   }
-
   function styledRepoName(name) {
-    return `\x1b[1m${fg24(230, 200, 50)}${name}${RESET}`;
+    return `\x1B[1m${fg24(230, 200, 50)}${name}${RESET}`;
   }
-
-  const leafName = path.basename(cwd);
-  const leafPart = leafName && leafName !== repoName ? `${fg24(150, 150, 150)}/${leafName}${RESET}` : '';
-
-  const dirtyPart = branch
-    ? [
-        modified > 0 ? `${fg24(230, 180, 20)}~${modified}${RESET}` : '',
-        untracked > 0 ? `${fg24(150, 150, 150)}?${untracked}${RESET}` : '',
-        added > 0 ? `${fg24(0, 200, 80)}+${added}${RESET}` : '',
-        deleted > 0 ? `${fg24(220, 40, 20)}-${deleted}${RESET}` : '',
-      ]
-        .filter(Boolean)
-        .join(' ')
-    : '';
-
-  const branchPrefix = branch ? `\x1b[1m${fg24(0, 215, 215)}🌿 (` : '';
-  const branchSuffix = branch ? `)${RESET}` : '';
-
-  const worktreeName = input?.worktree?.name || input?.workspace?.git_worktree || '';
-  const hasWorktree = Boolean(worktreeName);
-  const worktreePart = hasWorktree ? `${fg24(80, 220, 120)}🌳 ${worktreeName}${RESET}` : '';
-
-  const contextLabel = maxContextTokens
-    ? `🪟 ${formatTokenCount(totalInputTokens)}/${formatTokenCount(maxContextTokens)}`
-    : `🪟 ${formatTokenCount(totalInputTokens)}`;
-
-  const velocityPart = `${fg24(150, 150, 150)}lines ${RESET}${fg24(0, 200, 80)}+${linesAdded}${RESET} ${fg24(220, 40, 20)}-${linesRemoved}${RESET}`;
-
-  const DOT = ` ${fg24(100, 100, 100)}·${RESET} `;
-
+  const leafName = path.basename(cwd), leafPart = leafName && leafName !== repoName ? `${fg24(150, 150, 150)}/${leafName}${RESET}` : "", dirtyPart = branch ? [
+    modified > 0 ? `${fg24(230, 180, 20)}~${modified}${RESET}` : "",
+    untracked > 0 ? `${fg24(150, 150, 150)}?${untracked}${RESET}` : "",
+    added > 0 ? `${fg24(0, 200, 80)}+${added}${RESET}` : "",
+    deleted > 0 ? `${fg24(220, 40, 20)}-${deleted}${RESET}` : ""
+  ].filter(Boolean).join(" ") : "", branchPrefix = branch ? `\x1B[1m${fg24(0, 215, 215)}\u{1F33F} (` : "", branchSuffix = branch ? `)${RESET}` : "", worktreeName = input?.worktree?.name || input?.workspace?.git_worktree || "", hasWorktree = !!worktreeName, worktreePart = hasWorktree ? `${fg24(80, 220, 120)}\u{1F333} ${worktreeName}${RESET}` : "", contextLabel = maxContextTokens ? `\u{1FA9F} ${formatTokenCount(totalInputTokens)}/${formatTokenCount(maxContextTokens)}` : `\u{1FA9F} ${formatTokenCount(totalInputTokens)}`, velocityPart = `${fg24(150, 150, 150)}lines ${RESET}${fg24(0, 200, 80)}+${linesAdded}${RESET} ${fg24(220, 40, 20)}-${linesRemoved}${RESET}`, DOT = ` ${fg24(100, 100, 100)}\xB7${RESET} `;
   function resetBracket(resetsAtSec) {
     const resetIn = formatResetIn(resetsAtSec);
-    return resetIn ? ` ${fg24(150, 150, 150)}(reset ${resetIn})${RESET}` : '';
+    return resetIn ? ` ${fg24(150, 150, 150)}(reset ${resetIn})${RESET}` : "";
   }
-
   const rateLimitSegments = [];
-  if (rateLimitPct != null) {
-    rateLimitSegments.push(usagePct(Number(rateLimitPct), '5h') + resetBracket(rateLimitResetsAt));
-  }
-  if (weekLimitPct != null) {
-    rateLimitSegments.push(usagePct(Number(weekLimitPct), '7d') + resetBracket(weekLimitResetsAt));
-  }
-  const rateLimitsPart = rateLimitSegments.join(DOT);
-
-  const effortPart = effortLevel ? ` (${effortLevel})` : '';
-
-  const modelPart = `${fg24(200, 80, 220)}🤖 ${model}${effortPart}${RESET}`;
-
-  const durationSec = Math.floor(durationMs / 1000);
-  const durationMin = Math.floor(durationSec / 60);
-  const durationSecRem = durationSec % 60;
-  const durationHours = Math.floor(durationMin / 60);
-  const durationMinRem = durationMin % 60;
-  const durationStr =
-    durationHours > 0 ? `${durationHours}h ${durationMinRem}m` : `${durationMin}m ${durationSecRem}s`;
-  const clockPart = `${fg24(150, 150, 150)}⏱️ ${durationStr}${RESET}`;
-
-  const costPart = totalCostUsd > 0 ? `${fg24(150, 150, 150)}💵 $${totalCostUsd.toFixed(2)}${RESET}` : '';
-
-  // Determine how much room is left for the branch name so the WHOLE status
-  // line fits within the terminal width, instead of a fixed character cap.
-  // Claude Code captures this script's stdout rather than connecting it to the
-  // terminal, so process.stdout.columns is always undefined here — the real
-  // width normally comes via the COLUMNS env var Claude Code sets before
-  // invoking us, with a Windows console fallback below when that's missing.
+  rateLimitPct != null && rateLimitSegments.push(usagePct(Number(rateLimitPct), "5h") + resetBracket(rateLimitResetsAt)), weekLimitPct != null && rateLimitSegments.push(usagePct(Number(weekLimitPct), "7d") + resetBracket(weekLimitResetsAt));
+  const rateLimitsPart = rateLimitSegments.join(DOT), effortPart = effortLevel ? ` (${effortLevel})` : "", modelPart = `${fg24(200, 80, 220)}\u{1F916} ${model}${effortPart}${RESET}`, durationSec = Math.floor(durationMs / 1e3), durationMin = Math.floor(durationSec / 60), durationSecRem = durationSec % 60, durationHours = Math.floor(durationMin / 60), durationMinRem = durationMin % 60, durationStr = durationHours > 0 ? `${durationHours}h ${durationMinRem}m` : `${durationMin}m ${durationSecRem}s`, clockPart = `${fg24(150, 150, 150)}\u23F1\uFE0F ${durationStr}${RESET}`, costPart = totalCostUsd > 0 ? `${fg24(150, 150, 150)}\u{1F4B5} $${totalCostUsd.toFixed(2)}${RESET}` : "";
   function detectTerminalWidth() {
-    const envColumns = parseInt(process.env.COLUMNS, 10);
+    const envColumns = parseInt(process.env.COLUMNS ?? "", 10);
     if (envColumns > 0) return envColumns;
-
-    // COLUMNS is a shell-exported variable (bash/zsh convention). It's not a
-    // standard Windows environment variable, so when this script is invoked
-    // through cmd.exe/PowerShell rather than a bash-like shell it may simply
-    // be absent. Ask the console directly in that case before giving up.
-    if (process.platform === 'win32') {
+    if (process.platform === "win32")
       try {
-        const out = execSync('mode con', { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
-        const match = out.match(/Columns:\s*(\d+)/i);
-        const cols = match ? parseInt(match[1], 10) : NaN;
+        const match = (0, import_child_process.execSync)("mode con", { stdio: ["ignore", "pipe", "ignore"] }).toString().match(/Columns:\s*(\d+)/i), cols = match ? parseInt(match[1], 10) : NaN;
         if (cols > 0) return cols;
       } catch {
-        // no attached console (e.g. output is fully redirected) — fall through
       }
-    }
-
     return 120;
   }
-
-  const terminalWidth = detectTerminalWidth();
-  // Claude Code reserves its own chrome around the rendered statusline row
-  // (measured empirically: a 209-column terminal only rendered 205 columns
-  // of content before Claude Code applied its own cutoff) — this isn't a
-  // fudge factor for our own width-estimation error, it's content Claude
-  // Code claims for itself regardless of what we report as the line length.
-  const safetyMargin = 4;
-
-  // Below this width (e.g. a split/narrow pane), spread the line across two
-  // rows instead of shrinking everything to fit one — model/context/repo on
-  // row 1, velocity/rate-limits/clock/cost on row 2. Each row then gets the
-  // FULL terminal width to itself rather than splitting one shared budget.
-  const TWO_LINE_WIDTH_THRESHOLD = 160;
-  const twoLine = terminalWidth < TWO_LINE_WIDTH_THRESHOLD;
-
-  // Truncates `text` to at most `available` visible characters, appending a
-  // single-character ellipsis instead of the removed tail. Used for both the
-  // branch name and the repo name, whichever needs to shrink to make the
-  // whole line fit the terminal width.
+  const terminalWidth = detectTerminalWidth(), safetyMargin = 4, twoLine = terminalWidth < 160;
   function truncateToFit(text, available) {
-    if (available <= 0) return '…';
+    if (available <= 0) return "\u2026";
     if (text.length <= available) return text;
     const keep = Math.max(0, available - 1);
-    return keep > 0 ? `${text.slice(0, keep)}…` : '…';
+    return keep > 0 ? `${text.slice(0, keep)}\u2026` : "\u2026";
   }
-
-  // Context bar shrinks before anything else, by drawing fewer of its (up to
-  // 20) blocks — sized against the full label/percentage plus the full,
-  // untruncated branch and repo name, since those only shrink afterward if
-  // shrinking the bar down to nothing still isn't enough.
-  const MAX_BAR_BLOCKS = 20;
-  // In 2-line mode, velocity/rate-limits/clock/cost move to row 2, so they no
-  // longer compete with the bar/branch/repo for row 1's width budget.
-  const trailingLineOneParts = twoLine ? [] : [velocityPart, rateLimitsPart, clockPart, costPart];
-  const contextPartZeroBar = usageTrio(usedPct, contextLabel, 0);
-  const modelContextPartZeroBar = [modelPart, contextPartZeroBar].filter(Boolean).join(' ');
-  const branchPlaceholderForBar = branch ? `${branchPrefix}${branch}${branchSuffix}` : '';
-  const repoPartForBar = [styledRepoName(repoName), leafPart, branchPlaceholderForBar, worktreePart, dirtyPart]
-    .filter(Boolean)
-    .join(' ');
-  const otherPartsForBar = [modelContextPartZeroBar, repoPartForBar, ...trailingLineOneParts].filter(Boolean);
-  const lengthWithoutBar = stripAnsi(otherPartsForBar.join(SEP)).length;
-  // Drawing 1+ blocks (vs. none) reintroduces an extra separating space
-  // between the bar and the percentage, so N blocks cost N+1 chars relative
-  // to the zero-bar baseline, not N.
-  const barBudget = terminalWidth - safetyMargin - lengthWithoutBar - 1;
-  // A worktree indicator takes priority over the context bar's blocks: when
-  // shown, the bar collapses to just its percentage so the line has room.
-  const barBlocks = hasWorktree ? 0 : Math.max(0, Math.min(MAX_BAR_BLOCKS, barBudget));
-  const contextPart = usageTrio(usedPct, contextLabel, barBlocks);
-  const modelContextPart = [modelPart, contextPart].filter(Boolean).join(' ');
-
-  // Branch shrinks first, sized against the full (untruncated) repo name.
-  const branchPlaceholder = branch ? `${branchPrefix}${branchSuffix}` : '';
-  const repoPartWithBranchPlaceholder = [
+  const MAX_BAR_BLOCKS = 20, trailingLineOneParts = twoLine ? [] : [velocityPart, rateLimitsPart, clockPart, costPart], contextPartZeroBar = usageTrio(usedPct, contextLabel, 0), modelContextPartZeroBar = [modelPart, contextPartZeroBar].filter(Boolean).join(" "), branchPlaceholderForBar = branch ? `${branchPrefix}${branch}${branchSuffix}` : "", repoPartForBar = [styledRepoName(repoName), leafPart, branchPlaceholderForBar, worktreePart, dirtyPart].filter(Boolean).join(" "), otherPartsForBar = [modelContextPartZeroBar, repoPartForBar, ...trailingLineOneParts].filter(Boolean), lengthWithoutBar = stripAnsi(otherPartsForBar.join(SEP)).length, barBudget = terminalWidth - safetyMargin - lengthWithoutBar - 1, barBlocks = hasWorktree ? 0 : Math.max(0, Math.min(MAX_BAR_BLOCKS, barBudget)), contextPart = usageTrio(usedPct, contextLabel, barBlocks), modelContextPart = [modelPart, contextPart].filter(Boolean).join(" "), branchPlaceholder = branch ? `${branchPrefix}${branchSuffix}` : "", repoPartWithBranchPlaceholder = [
     styledRepoName(repoName),
     leafPart,
     branchPlaceholder,
     worktreePart,
-    dirtyPart,
-  ]
-    .filter(Boolean)
-    .join(' ');
-  const otherParts = [modelContextPart, repoPartWithBranchPlaceholder, ...trailingLineOneParts].filter(Boolean);
-  const baseLineVisibleLength = stripAnsi(otherParts.join(SEP)).length;
-
-  const truncatedBranch = branch
-    ? truncateToFit(branch, terminalWidth - baseLineVisibleLength - safetyMargin)
-    : branch;
-  const branchPart = branch ? `${branchPrefix}${truncatedBranch}${branchSuffix}` : '';
-
-  // Repo name shrinks second, against the actual remaining budget once the
-  // branch above is already final — so a short repo name only gets
-  // truncated if shrinking the branch alone still wasn't enough.
-  const repoPartPlaceholder = [styledRepoName(''), leafPart, branchPart, worktreePart, dirtyPart]
-    .filter(Boolean)
-    .join(' ');
-  const partsWithRepoPlaceholder = [modelContextPart, repoPartPlaceholder, ...trailingLineOneParts].filter(Boolean);
-  const lengthWithoutRepoName = stripAnsi(partsWithRepoPlaceholder.join(SEP)).length;
-  const truncatedRepoName = truncateToFit(repoName, terminalWidth - lengthWithoutRepoName - safetyMargin);
-  const folderPart = styledRepoName(truncatedRepoName);
-
-  const repoPart = [folderPart, leafPart, branchPart, worktreePart, dirtyPart].filter(Boolean).join(' ');
-
-  // Final safety net: even if the branch/repo-name truncation above
-  // under-estimated (stale/unavailable terminal width, emoji-width quirks,
-  // etc.), make sure a rendered row can never overflow the terminal and get
-  // hard-cut mid-segment by it. Trims from the right as a last resort.
+    dirtyPart
+  ].filter(Boolean).join(" "), otherParts = [modelContextPart, repoPartWithBranchPlaceholder, ...trailingLineOneParts].filter(Boolean), baseLineVisibleLength = stripAnsi(otherParts.join(SEP)).length, truncatedBranch = branch && truncateToFit(branch, terminalWidth - baseLineVisibleLength - safetyMargin), branchPart = branch ? `${branchPrefix}${truncatedBranch}${branchSuffix}` : "", repoPartPlaceholder = [styledRepoName(""), leafPart, branchPart, worktreePart, dirtyPart].filter(Boolean).join(" "), partsWithRepoPlaceholder = [modelContextPart, repoPartPlaceholder, ...trailingLineOneParts].filter(Boolean), lengthWithoutRepoName = stripAnsi(partsWithRepoPlaceholder.join(SEP)).length, truncatedRepoName = truncateToFit(repoName, terminalWidth - lengthWithoutRepoName - safetyMargin), repoPart = [styledRepoName(truncatedRepoName), leafPart, branchPart, worktreePart, dirtyPart].filter(Boolean).join(" ");
   function hardTruncateToTerminal(line) {
-    const visibleLength = stripAnsi(line).length;
-    const hardBudget = terminalWidth - safetyMargin;
-    if (hardBudget > 0 && visibleLength > hardBudget) {
-      return truncateAnsiToWidth(line, Math.max(0, hardBudget - 1)) + RESET + '…';
-    }
-    return line;
+    const visibleLength = stripAnsi(line).length, hardBudget = terminalWidth - safetyMargin;
+    return hardBudget > 0 && visibleLength > hardBudget ? truncateAnsiToWidth(line, Math.max(0, hardBudget - 1)) + RESET + "\u2026" : line;
   }
-
   const lineOneParts = [modelContextPart, repoPart, ...trailingLineOneParts].filter(Boolean);
   let output = hardTruncateToTerminal(lineOneParts.join(SEP));
-
   if (twoLine) {
     const lineTwoParts = [velocityPart, rateLimitsPart, clockPart, costPart].filter(Boolean);
-    if (lineTwoParts.length > 0) {
-      output += '\n' + hardTruncateToTerminal(lineTwoParts.join(SEP));
-    }
+    lineTwoParts.length > 0 && (output += `
+` + hardTruncateToTerminal(lineTwoParts.join(SEP)));
   }
-
-  process.stdout.write(output + '\n');
+  process.stdout.write(output + `
+`);
 });
