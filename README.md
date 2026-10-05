@@ -44,7 +44,11 @@ Below 160 columns (e.g. a non-maximized window or a split pane), the line switch
 
 ## Install
 
-For Claude Code, clone this repo and run `/statusline` inside Claude Code, pointing it at `statusline.js` from your local clone.
+For Claude Code, run `/statusline` inside Claude Code and paste this repo's link (https://github.com/gitPhate/ClaudeCodeStatusline) — no need to clone it first.
+
+```text
+/statusline https://github.com/gitPhate/ClaudeCodeStatusline
+```
 
 ### Codex CLI
 
