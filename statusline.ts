@@ -9,7 +9,7 @@ import * as path from 'path';
 // live copy at ~/.claude/statusline.js and this repo copy must always be
 // kept in sync, `node statusline.js --version` lets you confirm which
 // version a given copy is running without reading its source.
-const SCRIPT_VERSION = '1.2.1';
+const SCRIPT_VERSION = '1.2.2';
 
 if (process.argv.includes('--version')) {
   process.stdout.write(`${SCRIPT_VERSION}\n`);
@@ -73,7 +73,7 @@ process.stdin.on('end', () => {
   let added = 0;
   let deleted = 0;
   try {
-    const statusLines = execSync('git status --porcelain --branch --untracked-files=all', {
+    const statusLines = execSync('git --no-optional-locks status --porcelain --branch --untracked-files=all', {
       cwd,
       stdio: ['ignore', 'pipe', 'ignore'],
     })
